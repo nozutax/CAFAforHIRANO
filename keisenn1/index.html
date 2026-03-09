@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自動車検査証記入申請書データ入力アプリ（軽専用1号様式）</title>
+    <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+    <script src="https://unpkg.com/@pdf-lib/fontkit/dist/fontkit.umd.min.js"></script>
+    <style>
+    body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f4f4f4; }
+    .container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    h1 { text-align: center; color: #333; font-size: 24px; }
+    .form-group { margin-bottom: 15px; }
+    label { display: block; font-weight: bold; margin-bottom: 5px; }
+    input[type="text"], input[type="number"] { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 16px; }
+    .box-input { letter-spacing: 5px; }
+    button { display: block; width: 100%; padding: 15px; background-color: #007BFF; color: white; border: none; border-radius: 4px; font-size: 18px; cursor: pointer; margin-top: 20px; }
+    button:hover { background-color: #0056b3; }
+    .row { display: flex; gap: 10px; align-items: center; }
+    .col { flex: 1; }
+    .note { font-size: 0.8em; color: #666; margin-top: 5px; }
+    .hyphen { font-weight: bold; padding: 0 5px; }
+    .form-block { border: 1px solid #e0e0e0; border-radius: 6px; padding: 12px 14px; margin-bottom: 16px; background: #fafafa; }
+    .form-block-title { font-weight: bold; font-size: 1em; margin-bottom: 10px; display: block; }
+    .form-block-label { display: block; font-size: 0.9em; margin-top: 10px; margin-bottom: 4px; font-weight: bold; }
+    .form-block-label:first-of-type { margin-top: 0; }
+
+    /* 共通レイアウト: 第3号様式ベース */
+    body {
+        font-family: "Helvetica Neue", Arial, sans-serif;
+        max-width: 950px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f0f2f5;
+        color: #333;
+    }
+    .container {
+        background: white;
+        padding: 40px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+        text-align: center;
+        font-size: 24px;
+        margin-bottom: 10px;
+    }
+    p.subtitle {
+        text-align: center;
+        color: #666;
+        font-size: 14px;
+        margin-bottom: 30px;
+    }
+    h2 {
+        font-size: 16px;
+        background: #eef5ff;
+        border-left: 5px solid #007BFF;
+        padding: 8px 10px;
+        margin-top: 30px;
+        margin-bottom: 15px;
+        font-weight: bold;
+    }
+    .form-group {
+        margin-bottom: 15px;
+    }
+    label {
+        display: block;
+        font-weight: bold;
+        font-size: 13px;
+        color: #555;
+        margin-bottom: 5px;
+    }
+    .hint {
+        font-size: 11px;
+        color: #888;
+        margin-top: 2px;
+        margin-bottom: 0;
+        line-height: 1.2;
+    }
+    input[type="text"], input[type="number"], select {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+        font-size: 15px;
+        background-color: #fff;
+    }
+    .row {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+    }
+    .col {
+        flex: 1;
+        min-width: 0;
+    }
+    button {
+        display: block;
+        width: 100%;
+        padding: 16px;
+        background-color: #007BFF;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 18px;
+        cursor: pointer;
+        margin-top: 40px;
+        font-weight: bold;
+    }
+    button:hover {
+        background-color: #0056b3;
+    }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>自動車検査証記入申請書データ入力アプリ（軽専用1号様式）</h1>
+    <p class="subtitle">軽専用1号様式への転記用入力フォーム</p>
+    <form id="pdfForm">
+        
+        <h2>1. 上部コード・番号提示</h2>
+        <!-- 番号提示 用途（同一Y位置） -->
+        <div class="row">
+            <div class="col">
+                <div class="form-group">
+                    <label>番号提示<br>用途１</label>
+                    <input type="text" id="number_purpose_1" maxlength="1" inputmode="numeric" placeholder="1文字">
+                </div>
+            </div>
+            <div class="col">
+                <div class="form-group">
+                    <label>番号提示<br>用途２</label>
+                    <input type="text" id="number_purpose_2" maxlength="1" inputmode="numeric" placeholder="1文字">
+                </div>
+            </div>
+            <div class="col">
+                <div class="form-group">
+                    <label>番号提示<br>用途３</label>
+                    <input type="text" id="number_purpose_3" maxlength="1" inputmode="numeric" placeholder="1文字">
+                </div>
+            </div>
+            <div class="col">
+                <div class="form-group">
+                    <label>番号提示<br>用途４</label>
+                    <input type="text" id="number_purpose_4" maxlength="1" inputmode="numeric" placeholder="1文字">
+                </div>
+            </div>
+        </div>
+
+        <h2>2. 希望番号・車両情報</h2>
+        <!-- 希望車両番号 -->
+        <div class="form-group">
+            <label>希望車両番号</label>
+            <div class="row">
+                <input type="text" id="hope_car_num_1" placeholder="123" style="flex:1">
+                <input type="text" id="hope_car_num_2" placeholder="あ" style="flex:0.5">
+                <input type="text" id="hope_car_num_3" placeholder="1234" style="flex:2">
+            </div>
+        </div>
+
+        <!-- 車両情報 -->
+        <div class="form-group">
+            <label>車両番号</label>
+            <div class="row">
+                <input type="text" id="car_num_1" placeholder="地域名" style="flex:2">
+                <input type="text" id="car_num_2" placeholder="123" style="flex:1">
+                <input type="text" id="car_num_3" placeholder="あ" style="flex:0.5">
+                <input type="text" id="car_num_4" placeholder="1234" style="flex:2">
+                <input type="text" id="car_num_5" placeholder="小板" style="flex:0.5">
+            </div>
+        </div>
+
+        <!-- 車台番号 7文字制限 -->
+        <div class="form-group">
+            <label>車台番号 (下7桁)</label>
+            <input type="text" id="chassis_num" maxlength="7" class="box-input" placeholder="7文字以下">
+        </div>
+
+        <h2>3. 使用者・所有者・本拠の住所</h2>
+        <!-- 住所・氏名欄 -->
+
+        <div class="form-group">
+            <label>４使用者 氏名又は名称</label>
+            <input type="text" id="user_name" placeholder="氏と名の間を1マス開けて入力">
+        </div>
+        <div class="form-group">
+            <label>５使用者住所</label>
+            <div class="row">
+                <input type="text" id="user_address_1" maxlength="12" placeholder="都道府県市区郡-町村-小字" style="flex:2">
+                <input type="text" id="user_address_2" maxlength="2" placeholder="丁目" style="flex:0.3">
+                <input type="text" id="user_address_3" maxlength="22" placeholder="番、号、番地、棟番号等" style="flex:2">
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="row" style="align-items: center;">
+                <label style="margin:0; flex: 0 0 auto;">
+                    <input type="checkbox" id="user_same_owner_name"> 使用者に同じ
+                </label>
+                <div style="flex:1;">
+                    <label for="owner_name_mei" style="display:block; margin-bottom:5px;">６所有者氏名又は名称</label>
+                    <input type="text" id="owner_name_mei" placeholder="氏名又は名称">
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="row" style="align-items: center;">
+                <label style="margin:0; flex: 0 0 auto;">
+                    <input type="checkbox" id="user_same_owner_address"> 使用者に同じ
+                </label>
+                <div style="flex:1;">
+                    <label style="display:block; margin-bottom:5px;">７所有者住所</label>
+                    <div class="row">
+                        <input type="text" id="owner_address_mei_1" maxlength="12" placeholder="都道府県市区郡-町村-小字" style="flex:2">
+                        <input type="text" id="owner_address_mei_2" maxlength="2" placeholder="丁目" style="flex:0.3">
+                        <input type="text" id="owner_address_mei_3" maxlength="22" placeholder="番、号、番地、棟番号等" style="flex:2">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="row" style="align-items: center;">
+                <label style="margin:0; flex: 0 0 auto;">
+                    <input type="checkbox" id="user_same_use_base"> 使用者に同じ
+                </label>
+                <div style="flex:1;">
+                    <label style="display:block; margin-bottom:5px;">９使用の本拠の位置</label>
+                    <div class="row">
+                        <input type="text" id="use_base_1" maxlength="12" placeholder="都道府県市区郡-町村-小字" style="flex:2">
+                        <input type="text" id="use_base_2" maxlength="2" placeholder="丁目" style="flex:0.3">
+                        <input type="text" id="use_base_3" maxlength="22" placeholder="番、号、番地、棟番号等" style="flex:2">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>所有者コード</label>
+            <input type="text" id="owner_code" maxlength="5" placeholder="5文字以下">
+        </div>
+        <div class="form-group">
+            <label>車体の塗色</label>
+            <input type="text" id="body_color" maxlength="1" placeholder="1文字">
+        </div>
+        <hr>
+        <h2>4. 申請人情報（使用者・所有者・受検者）</h2>
+        <div class="form-group form-block">
+            <div class="form-block-title">申請者（使用者）</div>
+            <label class="form-block-label">氏名又は名称</label>
+            <input type="text" id="applicant_name" placeholder="氏名又は名称">
+            <label class="form-block-label">住所</label>
+            <input type="text" id="applicant_address" placeholder="住所">
+        </div>
+
+        <div class="form-group form-block">
+            <div class="form-block-title">所有者</div>
+            <label class="form-block-label">氏名又は名称</label>
+            <input type="text" id="owner_name" placeholder="氏名又は名称">
+            <label class="form-block-label">住所</label>
+            <input type="text" id="owner_address" placeholder="住所">
+        </div>
+        <hr>
+        <div class="form-group form-block">
+            <div class="form-block-title">旧使用者</div>
+            <label class="form-block-label">氏名又は名称</label>
+            <input type="text" id="ex_user_name" placeholder="氏名又は名称">
+            <label class="form-block-label">住所</label>
+            <input type="text" id="ex_user_address" placeholder="住所">
+        </div>
+        <div class="form-group form-block">
+            <div class="form-block-title">旧所有者</div>
+            <label class="form-block-label">氏名又は名称</label>
+            <input type="text" id="ex_owner_name" placeholder="氏名又は名称">
+            <label class="form-block-label">住所</label>
+            <input type="text" id="ex_owner_address" placeholder="住所">
+        </div>
+        <hr>
+        <div class="form-group">
+            <label>変更事項</label>
+            <input type="text" id="change_details" placeholder="変更事項">
+        </div>
+
+        <button type="button" onclick="generatePDF()">PDFを作成してダウンロード</button>
+    </form>
+</div>
+
+<script>
+    const { PDFDocument, rgb } = PDFLib;
+
+    async function generatePDF() {
+        // 1. テンプレートPDFとフォントの読み込み
+        let pdfBytes, fontBytes;
+        
+        try {
+            const pdfUrl = 'template.pdf';
+            const fontUrl = 'font.ttf';
+            
+            [pdfBytes, fontBytes] = await Promise.all([
+                fetch(pdfUrl).then(res => res.arrayBuffer()),
+                fetch(fontUrl).then(res => res.arrayBuffer())
+            ]);
+        } catch (e) {
+            alert("ファイルの読み込みに失敗しました。template.pdf と font.ttf が同じフォルダにあるか確認してください。");
+            return;
+        }
+
+        // 2. PDFドキュメントの生成
+        const pdfDoc = await PDFDocument.load(pdfBytes);
+        pdfDoc.registerFontkit(fontkit);
+        const customFont = await pdfDoc.embedFont(fontBytes);
+        const page = pdfDoc.getPages()[0];
+        
+        // 描画関数
+        const drawText = (text, x, y, size = 10, spacing = 0) => {
+            if (!text) return;
+            if (spacing > 0) {
+                for (let i = 0; i < text.length; i++) {
+                    page.drawText(text[i], {
+                        x: x + (i * spacing),
+                        y: y,
+                        size: size,
+                        font: customFont,
+                        color: rgb(0, 0, 0),
+                    });
+                }
+            } else {
+                page.drawText(text, { x, y, size, font: customFont, color: rgb(0, 0, 0) });
+            }
+        };
+
+        const v = (id) => document.getElementById(id).value;
+        const isChecked = (id) => document.getElementById(id).checked;
+
+        // === 座標のマッピング ===
+
+        // 1. 番号提示 用途1〜4（同一Y=535）
+        drawText(v('number_purpose_1'), 440, 535, 12);
+        drawText(v('number_purpose_2'), 480, 535, 12);
+        drawText(v('number_purpose_3'), 530, 535, 12);
+        drawText(v('number_purpose_4'), 570, 535, 12);
+
+        const BOX_WIDTH = 17;
+
+        // 2. 希望車両番号（Y=510）※地域名・小板なし
+        drawText(v('hope_car_num_1'), 170, 495, 12, BOX_WIDTH);
+        drawText(v('hope_car_num_2'), 235, 495, 12);
+        drawText(v('hope_car_num_3'), 270, 495, 12, BOX_WIDTH);
+
+        // 3. 車両番号 
+        drawText(v('car_num_1'), 40, 445, 12, 32); 
+        drawText(v('car_num_2'), 170, 445, 12, BOX_WIDTH);
+        drawText(v('car_num_3'), 235, 445, 12);
+        drawText(v('car_num_4'), 270, 445, 12, BOX_WIDTH);
+        drawText(v('car_num_5'), 345, 445, 12);
+
+        // 4. 車台番号
+        drawText(v('chassis_num'), 379, 445, 12, BOX_WIDTH);
+
+        // 8. 氏名・住所
+        const LEFT_X = 120;
+
+        drawText(v('user_name'), 70, 362, 18,31);
+        drawText(v('user_address_1'), 65, 323,12, BOX_WIDTH);
+        drawText(v('user_address_2'), 278, 323,12, BOX_WIDTH);
+        drawText(v('user_address_3'), 320.5, 323,12, BOX_WIDTH);
+
+        // ６所有者氏名又は名称：チェック時は[1]、未チェック時は入力値を出力
+        if (isChecked('user_same_owner_name')) drawText('1', 37, 260, 10);
+        else drawText(v('owner_name_mei'), 70, 260, 18,31);
+        // ７所有者住所：チェック時は[1]、未チェック時は3フォームの値を出力（５使用者住所と同様）
+        if (isChecked('user_same_owner_address')) drawText('1', 37, 210, 10);
+        else {
+            drawText(v('owner_address_mei_1'), 65, 210, 12, BOX_WIDTH);
+            drawText(v('owner_address_mei_2'), 278, 210, 12, BOX_WIDTH);
+            drawText(v('owner_address_mei_3'), 320.5, 210, 12, BOX_WIDTH);
+        }
+        // ９使用の本拠の位置：チェック時は[1]、未チェック時は3フォームの値を出力（５使用者住所と同様）
+        if (isChecked('user_same_use_base')) drawText('1', 37, 156, 10);
+        else {
+            drawText(v('use_base_1'), 65, 156, 12, BOX_WIDTH);
+            drawText(v('use_base_2'), 278, 156, 12, BOX_WIDTH);
+            drawText(v('use_base_3'), 320.5, 156, 12, BOX_WIDTH);
+        }
+
+        drawText(v('owner_code'), 733, 260, 10,BOX_WIDTH);
+        drawText(v('body_color'), 733, 156, 10,BOX_WIDTH);
+        
+        drawText(v('applicant_name'), LEFT_X, 110, 10);
+        drawText(v('applicant_address'), LEFT_X, 80, 10);
+        drawText(v('owner_name'), LEFT_X, 49, 10);
+        drawText(v('owner_address'), LEFT_X, 20, 10);
+
+        drawText(v('ex_user_name'), LEFT_X+270, 110, 10);
+        drawText(v('ex_user_address'), LEFT_X+270, 80, 10);
+        drawText(v('ex_owner_name'), LEFT_X+270, 49, 10);
+        drawText(v('ex_owner_address'), LEFT_X+270, 20, 10);
+
+        drawText(v('change_details'), LEFT_X+570, 40, 12);
+
+        // 3. ファイル名の生成処理
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const dateStr = `${year}${month}${day}`;
+
+        // 使用者氏名（４使用者 氏名又は名称）をファイル名に利用
+        let userName = v('user_name');
+        if (!userName) {
+            userName = '名称未入力';
+        }
+        // ファイル名で使えない文字はアンダースコアに置換
+        const safeUserName = userName.replace(/[\\/:*?"<>|]/g, '_');
+
+        // 「ダウンロードした年月日_使用者氏名_軽専用第1号.pdf」形式
+        const fileName = `${dateStr}_${safeUserName}_軽専用第1号.pdf`;
+
+        // 4. ダウンロード実行
+        const pdfDataUri = await pdfDoc.saveAsBase64({ dataUri: true });
+        const link = document.createElement('a');
+        link.href = pdfDataUri;
+        link.download = fileName;
+        link.click();
+    }
+</script>
+
+</body>
+</html>
