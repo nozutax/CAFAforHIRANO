@@ -62,11 +62,11 @@
                 <h1 class="font-bold text-xl tracking-tight text-slate-900 dark:text-white italic">ポータル</h1>
             </div>
             <nav class="space-y-1">
-                <a href="#" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-lg text-primary bg-blue-50 dark:bg-blue-900/20 group">
+                <a href="#" id="navDashboard" data-view="dashboard" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-lg text-primary bg-blue-50 dark:bg-blue-900/20 group sidebar-item-active">
                     <span class="material-symbols-outlined text-[20px]">dashboard</span>
                     ダッシュボード
                 </a>
-                <a href="#" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-all group">
+                <a href="#" id="navHistory" data-view="history" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-all group">
                     <span class="material-symbols-outlined text-[20px]">history</span>
                     申請履歴
                 </a>
@@ -102,7 +102,7 @@
             </div>
         </header>
 
-        <div class="space-y-10">
+        <div id="dashboardView" class="space-y-10">
             <!-- 普通自動車 -->
             <section>
                 <div class="flex items-center justify-between mb-5 border-b border-slate-200 dark:border-slate-800 pb-3">
@@ -349,6 +349,49 @@
             </section>
         </div>
 
+        <!-- 申請履歴ビュー -->
+        <section id="historyView" class="hidden">
+            <div class="flex items-center justify-between mb-6 border-b border-slate-200 dark:border-slate-800 pb-3">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary font-bold">history</span>
+                    <h3 class="text-lg font-bold text-slate-800 dark:text-slate-200">申請履歴</h3>
+                </div>
+            </div>
+
+            <div class="mb-6 p-4 bg-white dark:bg-slate-900/40 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+                <div class="grid gap-4 md:grid-cols-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1">保存年月日（YYYYMMDD で検索）</label>
+                        <input id="filterDate" type="text" placeholder="例: 20260309" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1">申請者</label>
+                        <input id="filterApplicant" type="text" placeholder="氏名で検索" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1">申請書類名</label>
+                        <input id="filterDocument" type="text" placeholder="書類名で検索" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-800 text-sm">
+                    <thead class="bg-slate-50 dark:bg-slate-900/40">
+                        <tr>
+                            <th class="px-4 py-2 text-left text-xs font-semibold text-slate-500">保存年月日</th>
+                            <th class="px-4 py-2 text-left text-xs font-semibold text-slate-500">申請者</th>
+                            <th class="px-4 py-2 text-left text-xs font-semibold text-slate-500">申請書類名</th>
+                            <th class="px-4 py-2 text-right text-xs font-semibold text-slate-500">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody" class="divide-y divide-slate-100 dark:divide-slate-800">
+                    </tbody>
+                </table>
+                <p id="historyEmpty" class="px-4 py-6 text-center text-xs text-slate-500">まだ申請履歴がありません。</p>
+            </div>
+        </section>
+
         <footer class="mt-16 py-8 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between text-slate-400 text-xs font-medium">
             <p>© 2026 自動車申請書ポータル. All Rights Reserved。</p>
             <div class="flex gap-6 mt-4 md:mt-0 uppercase tracking-tighter">
@@ -361,5 +404,193 @@
 
     <div class="fixed top-0 right-0 -z-10 w-[400px] h-[400px] bg-blue-100/20 dark:bg-blue-900/10 blur-[100px] rounded-full translate-x-1/2 -translate-y-1/2"></div>
     <div class="fixed bottom-0 left-0 -z-10 w-[300px] h-[300px] bg-emerald-100/10 dark:bg-emerald-900/5 blur-[80px] rounded-full -translate-x-1/2 translate-y-1/2"></div>
+
+    <!-- 申請履歴 詳細モーダル -->
+    <div id="historyDetailModal" class="hidden fixed inset-0 z-30 items-center justify-center bg-slate-900/40">
+        <div class="bg-white dark:bg-slate-900 max-w-2xl w-11/12 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 p-5">
+            <div class="flex items-center justify-between mb-3">
+                <div>
+                    <h3 id="historyDetailTitle" class="text-sm font-bold text-slate-800 dark:text-slate-100">申請詳細</h3>
+                    <p id="historyDetailMeta" class="text-[11px] text-slate-500 mt-0.5"></p>
+                </div>
+                <button class="p-1 rounded-md border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800" onclick="closeHistoryDetail()">
+                    <span class="material-symbols-outlined text-[18px]">close</span>
+                </button>
+            </div>
+            <div id="historyDetailBody" class="max-h-[60vh] overflow-auto text-sm space-y-1">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            const HISTORY_KEY = 'applicationHistory';
+
+            function loadHistory() {
+                try {
+                    const raw = localStorage.getItem(HISTORY_KEY);
+                    if (!raw) return [];
+                    const parsed = JSON.parse(raw);
+                    return Array.isArray(parsed) ? parsed : [];
+                } catch (e) {
+                    console.error('履歴の読み込みに失敗しました。', e);
+                    return [];
+                }
+            }
+
+            function applyHistoryFilters(records) {
+                const dateFilter = (document.getElementById('filterDate')?.value || '').trim();
+                const applicantFilter = (document.getElementById('filterApplicant')?.value || '').trim();
+                const documentFilter = (document.getElementById('filterDocument')?.value || '').trim();
+
+                return records.filter(rec => {
+                    if (dateFilter && !String(rec.savedDateKey || '').includes(dateFilter)) return false;
+                    if (applicantFilter && !(rec.applicantName || '').includes(applicantFilter)) return false;
+                    if (documentFilter && !(rec.documentName || '').includes(documentFilter)) return false;
+                    return true;
+                });
+            }
+
+            function renderHistoryTable() {
+                const tbody = document.getElementById('historyTableBody');
+                const empty = document.getElementById('historyEmpty');
+                if (!tbody || !empty) return;
+
+                const all = loadHistory().slice().sort((a, b) => {
+                    const aKey = a.savedAt || '';
+                    const bKey = b.savedAt || '';
+                    return bKey.localeCompare(aKey);
+                });
+                const filtered = applyHistoryFilters(all);
+
+                tbody.innerHTML = '';
+                filtered.forEach(rec => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors';
+                    tr.innerHTML = `
+                        <td class="px-4 py-2 align-top whitespace-nowrap text-xs text-slate-700 dark:text-slate-200">${rec.savedAt || ''}</td>
+                        <td class="px-4 py-2 align-top text-xs text-slate-700 dark:text-slate-200">${rec.applicantName || ''}</td>
+                        <td class="px-4 py-2 align-top text-xs text-slate-700 dark:text-slate-200">${rec.documentName || ''}</td>
+                        <td class="px-4 py-2 align-top text-right">
+                            <button class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-600 text-[11px] text-slate-700 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-700">
+                                <span class="material-symbols-outlined text-[14px]">visibility</span>
+                                詳細
+                            </button>
+                        </td>
+                    `;
+                    const btn = tr.querySelector('button');
+                    if (btn) {
+                        btn.addEventListener('click', () => openHistoryDetail(rec));
+                    }
+                    tbody.appendChild(tr);
+                });
+
+                empty.classList.toggle('hidden', filtered.length > 0);
+            }
+
+            function openHistoryDetail(rec) {
+                const body = document.getElementById('historyDetailBody');
+                const title = document.getElementById('historyDetailTitle');
+                const meta = document.getElementById('historyDetailMeta');
+                const modal = document.getElementById('historyDetailModal');
+                if (!body || !title || !meta || !modal) return;
+
+                body.innerHTML = '';
+                const items = Array.isArray(rec.formSnapshot) ? rec.formSnapshot : [];
+                items.forEach(item => {
+                    const row = document.createElement('div');
+                    row.className = 'flex text-xs py-0.5 border-b border-dashed border-slate-100 dark:border-slate-800 last:border-0';
+                    const label = document.createElement('div');
+                    label.className = 'w-40 shrink-0 pr-2 font-semibold text-slate-600 dark:text-slate-300';
+                    label.textContent = item.label || '';
+                    const value = document.createElement('div');
+                    value.className = 'flex-1 text-slate-800 dark:text-slate-100';
+                    value.textContent = item.value || '';
+                    row.appendChild(label);
+                    row.appendChild(value);
+                    body.appendChild(row);
+                });
+
+                title.textContent = `${rec.documentName || '申請書類'} / ${rec.applicantName || '申請者未入力'}`;
+                meta.textContent = `保存日時: ${rec.savedAt || ''}`;
+
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+
+            window.closeHistoryDetail = function () {
+                const modal = document.getElementById('historyDetailModal');
+                if (!modal) return;
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            };
+
+            function setActiveNav(view) {
+                const dash = document.getElementById('navDashboard');
+                const hist = document.getElementById('navHistory');
+                if (dash) {
+                    dash.classList.toggle('sidebar-item-active', view === 'dashboard');
+                    if (view === 'dashboard') {
+                        dash.classList.add('text-primary', 'bg-blue-50', 'dark:bg-blue-900/20');
+                    } else {
+                        dash.classList.remove('text-primary', 'bg-blue-50', 'dark:bg-blue-900/20');
+                        dash.classList.add('text-slate-600', 'dark:text-slate-400');
+                    }
+                }
+                if (hist) {
+                    hist.classList.toggle('sidebar-item-active', view === 'history');
+                    if (view === 'history') {
+                        hist.classList.add('text-primary', 'bg-blue-50', 'dark:bg-blue-900/20');
+                    } else {
+                        hist.classList.remove('text-primary', 'bg-blue-50', 'dark:bg-blue-900/20');
+                        hist.classList.add('text-slate-600', 'dark:text-slate-400');
+                    }
+                }
+            }
+
+            function switchView(view) {
+                const dashView = document.getElementById('dashboardView');
+                const histView = document.getElementById('historyView');
+                if (dashView && histView) {
+                    if (view === 'history') {
+                        dashView.classList.add('hidden');
+                        histView.classList.remove('hidden');
+                        renderHistoryTable();
+                    } else {
+                        histView.classList.add('hidden');
+                        dashView.classList.remove('hidden');
+                    }
+                }
+                setActiveNav(view);
+            }
+
+            document.addEventListener('DOMContentLoaded', () => {
+                const navDash = document.getElementById('navDashboard');
+                const navHist = document.getElementById('navHistory');
+                if (navDash) {
+                    navDash.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        switchView('dashboard');
+                    });
+                }
+                if (navHist) {
+                    navHist.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        switchView('history');
+                    });
+                }
+
+                ['filterDate', 'filterApplicant', 'filterDocument'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.addEventListener('input', () => renderHistoryTable());
+                    }
+                });
+
+                // 初期表示はダッシュボード
+                switchView('dashboard');
+            });
+        })();
+    </script>
 </body>
 </html>
