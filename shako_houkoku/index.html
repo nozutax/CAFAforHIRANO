@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自動車保管場所現地調査結果報告書 作成アプリ</title>
+    <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+    <script src="https://unpkg.com/@pdf-lib/fontkit/dist/fontkit.umd.min.js"></script>
+    <style>
+        /* 既存スタイル */
+        body { font-family: "Helvetica Neue", Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f4f4f4; }
+        .container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #333; font-size: 22px; margin-bottom: 20px; }
+        h2 { font-size: 16px; border-bottom: 2px solid #007BFF; padding-bottom: 5px; margin-top: 30px; margin-bottom: 15px; color: #007BFF; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 14px; }
+        input[type="text"], input[type="number"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 16px; }
+        
+        /* ラジオボタン・チェックボックスのスタイル調整 */
+        .radio-group, .checkbox-group { display: flex; flex-wrap: wrap; gap: 15px; }
+        .radio-label, .checkbox-label { display: flex; align-items: center; font-weight: normal; cursor: pointer; }
+        .radio-label input, .checkbox-label input { margin-right: 5px; transform: scale(1.2); }
+
+        button { display: block; width: 100%; padding: 15px; background-color: #007BFF; color: white; border: none; border-radius: 4px; font-size: 18px; cursor: pointer; margin-top: 30px; }
+        button:hover { background-color: #0056b3; }
+        
+        .row { display: flex; gap: 10px; align-items: center; }
+        .col { flex: 1; }
+        .suffix { white-space: nowrap; margin-left: 5px; font-size: 14px; }
+
+        /* 共通レイアウト: 第3号様式ベース（上書き用） */
+        body {
+            font-family: "Helvetica Neue", Arial, sans-serif;
+            max-width: 950px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        p.subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+        h2 {
+            font-size: 16px;
+            background: #eef5ff;
+            border-left: 5px solid #007BFF;
+            padding: 8px 10px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-weight: bold;
+            border-bottom: none;
+            color: #111;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 5px;
+        }
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 15px;
+            background-color: #fff;
+        }
+        .row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .col {
+            flex: 1;
+            min-width: 0;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 18px;
+            cursor: pointer;
+            margin-top: 30px;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>自動車保管場所現地調査結果報告書</h1>
+    <form id="pdfForm">
+        
+        <h2>申請者情報</h2>
+        <div class="form-group">
+            <label>申請者の住所</label>
+            <input type="text" id="applicant_address" placeholder="東京都千代田区...">
+        </div>
+        <div class="form-group">
+            <label>申請者の氏名</label>
+            <input type="text" id="applicant_name" placeholder="山田 太郎">
+        </div>
+
+        <div class="form-group">
+            <label>保管場所の位置（住所）</label>
+            <input type="text" id="storage_location" placeholder="同上 または 住所を入力">
+        </div>
+
+        <!-- 申請車種 -->
+        <h2>申請車種</h2>
+        <div class="form-group">
+            <div class="radio-group">
+                <label class="radio-label"><input type="radio" name="car_type" value="small_pass"> 小型乗用</label>
+                <label class="radio-label"><input type="radio" name="car_type" value="normal_pass"> 普通乗用</label>
+                <label class="radio-label"><input type="radio" name="car_type" value="small_cargo"> 小型貨物</label>
+                <label class="radio-label"><input type="radio" name="car_type" value="normal_cargo"> 普通貨物</label>
+                <label class="radio-label"><input type="radio" name="car_type" value="other"> その他</label>
+            </div>
+        </div>
+        <div class="form-group" id="car_type_other_text_group" style="margin-top:8px; display:none;">
+            <label style="font-weight:normal; font-size:12px;">申請車種「その他」の内容</label>
+            <input type="text" id="car_type_other_text" placeholder="その他の内容を入力">
+        </div>
+
+        <!-- 申請事由 -->
+        <h2>申請事由</h2>
+        <div class="form-group">
+            <div class="radio-group">
+                <!-- ラベル修正: 新車(新規)→新規, 代車(代替)→代替 -->
+                <label class="radio-label"><input type="radio" name="app_reason" value="new_car"> 新規</label>
+                <label class="radio-label"><input type="radio" name="app_reason" value="sub_car"> 代替</label>
+                <label class="radio-label"><input type="radio" name="app_reason" value="name_change"> 名義変更</label>
+                <label class="radio-label"><input type="radio" name="app_reason" value="business_car"> 商用車</label>
+                <label class="radio-label"><input type="radio" name="app_reason" value="other"> その他</label>
+                <label class="radio-label"><input type="radio" name="app_reason" value="add_car"> 増車</label>
+            </div>
+        </div>
+        <div class="form-group" id="app_reason_add_text_group" style="margin-top:8px; display:none;">
+            <label style="font-weight:normal; font-size:12px;">増車の台数</label>
+            <input type="text" id="app_reason_add_text" placeholder="台数を入力">
+        </div>
+
+        <!-- 代替車両等の詳細 -->
+        <div class="form-group" style="background: #f9f9f9; padding: 15px; border-radius: 4px;">
+            <label>代替車両等の詳細</label>
+            <div class="form-group">
+                <label style="font-weight:normal; font-size:12px;">代替車両の車名</label>
+                <input type="text" id="sub_car_name" placeholder="例：トヨタ プリウス">
+            </div>
+            <div class="form-group">
+                <label style="font-weight:normal; font-size:12px;">代替車両の登録年月</label>
+                <div class="row">
+                    <!-- 入力を type="text" に変更 -->
+                    <input type="text" id="sub_reg_year" placeholder="例：令和5" style="flex:1">
+                    <span class="suffix">年</span>
+                    <input type="text" id="sub_reg_month" placeholder="例：10" style="flex:1">
+                    <span class="suffix">月</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label style="font-weight:normal; font-size:12px;">車台番号</label>
+                <input type="text" id="chassis_num" placeholder="ABC-1234567">
+            </div>
+        </div>
+
+        <!-- 保管場所の種類（複数選択可） -->
+        <h2>保管場所の種類</h2>
+        <div class="form-group">
+            <div class="checkbox-group">
+                <label class="checkbox-label"><input type="checkbox" name="storage_type" value="lot"> 空地</label>
+                <label class="checkbox-label"><input type="checkbox" name="storage_type" value="garage"> 車庫</label>
+                <label class="checkbox-label"><input type="checkbox" name="storage_type" value="rental"> 貸ガレージ</label>
+                <label class="checkbox-label"><input type="checkbox" name="storage_type" value="single"> 単独</label>
+                <label class="checkbox-label"><input type="checkbox" name="storage_type" value="shared"> 共用</label>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>総収容台数</label>
+            <div class="row">
+                <input type="number" id="capacity" placeholder="1" style="flex:1">
+                <span class="suffix">台</span>
+            </div>
+        </div>
+
+        <!-- 保管場所の広さ -->
+        <h2>保管場所の広さ</h2>
+        <div class="row">
+            <div class="col">
+                <label>縦 (m)</label>
+                <input type="text" id="dim_length" placeholder="5.0">
+            </div>
+            <div class="col">
+                <label>横 (m)</label>
+                <input type="text" id="dim_width" placeholder="2.5">
+            </div>
+            <div class="col">
+                <label>面積 (㎡)</label>
+                <input type="text" id="dim_area" placeholder="12.5">
+            </div>
+        </div>
+
+        <button type="button" onclick="generatePDF()">PDFを作成してダウンロード</button>
+    </form>
+</div>
+
+<script>
+    const { PDFDocument, rgb } = PDFLib;
+
+    async function generatePDF() {
+        let pdfBytes, fontBytes;
+        
+        try {
+            const pdfUrl = 'template.pdf';
+            const fontUrl = 'font.ttf';
+            
+            [pdfBytes, fontBytes] = await Promise.all([
+                fetch(pdfUrl).then(res => res.arrayBuffer()),
+                fetch(fontUrl).then(res => res.arrayBuffer())
+            ]);
+        } catch (e) {
+            alert("ファイルの読み込みに失敗しました。template.pdf と font.ttf が同じフォルダにあるか確認してください。");
+            return;
+        }
+
+        const pdfDoc = await PDFDocument.load(pdfBytes);
+        pdfDoc.registerFontkit(fontkit);
+        const customFont = await pdfDoc.embedFont(fontBytes);
+        const page = pdfDoc.getPages()[0];
+        const { width, height } = page.getSize();
+
+        // 描画ヘルパー関数
+        const drawText = (text, x, y, size = 10) => {
+            if (!text) return;
+            page.drawText(String(text), {
+                x: x,
+                y: y,
+                size: size,
+                font: customFont,
+                color: rgb(0, 0, 0),
+            });
+        };
+
+        // 丸印（横長の楕円）を描画する関数
+        const drawCircleMark = (x, y) => {
+            // x, y を中心として横長の楕円枠を描画
+            page.drawEllipse({
+                x: x,
+                y: y,
+                xScale: 25,   // 横方向半径（大きめ）
+                yScale: 8,    // 縦方向半径（小さめ）→ 横長に見せる
+                borderColor: rgb(0, 0, 0),
+                borderWidth: 1.2,
+            });
+        };
+
+        const v = (id) => document.getElementById(id).value;
+        const getRadio = (name) => {
+            const els = document.getElementsByName(name);
+            for (let el of els) {
+                if (el.checked) return el.value;
+            }
+            return null;
+        };
+        const getCheckboxes = (name) => {
+            const els = document.getElementsByName(name);
+            return Array.from(els).filter(el => el.checked).map(el => el.value);
+        };
+
+        // === 座標のマッピング ===
+        // ※PDFのY座標は下から上に向かって増えます。
+
+        // 1. 申請者の住所・氏名
+        // Y座標目安: 上から1/3あたり
+        const applicantY = height - 165; 
+        drawText(v('applicant_address'), 200, applicantY -15);
+        drawText(v('applicant_name'), 600, applicantY - 15);
+
+        // 2. 保管場所の位置
+        drawText(v('storage_location'), 200,  applicantY - 40);
+
+        // 3. 申請車種・申請事由のラジオボタン処理
+        const carTypeY = height - 221;
+        const reasonY = height - 254;
+
+        // 申請車種（小型乗用・普通乗用・小型貨物・普通貨物・その他）
+        const carTypeVal = getRadio('car_type');
+        if (carTypeVal === 'small_pass') {
+            // 小型乗用
+            drawCircleMark(225, carTypeY);
+        } else if (carTypeVal === 'normal_pass') {
+            // 普通乗用
+            drawCircleMark(315, carTypeY);
+        } else if (carTypeVal === 'small_cargo') {
+            // 小型貨物
+            drawCircleMark(395, carTypeY); 
+        } else if (carTypeVal === 'normal_cargo') {
+            // 普通貨物
+            drawCircleMark(480, carTypeY);
+        } else if (carTypeVal === 'other') {
+            // その他
+            drawCircleMark(570, carTypeY);
+            // その他の内容テキスト（〇の右側に出力）
+            const otherText = v('car_type_other_text');
+            if (otherText) {
+                drawText(otherText, 620, carTypeY-3 , 9);
+            }
+        }
+
+        // 申請事由（新規・代替・名義変更・商用車・増車・その他）
+        const reasonVal = getRadio('app_reason');
+        if (reasonVal === 'new_car') {
+            // 新規
+            drawCircleMark(225, reasonY);
+        } else if (reasonVal === 'sub_car') {
+            // 代替
+            drawCircleMark(315, reasonY);
+        } else if (reasonVal === 'name_change') {
+            // 名義変更
+            drawCircleMark(410, reasonY);
+        } else if (reasonVal === 'business_car') {
+            // 商用車
+            drawCircleMark(500, reasonY);
+        } else if (reasonVal === 'add_car') {
+            // 増車
+            drawCircleMark(225, reasonY - 26);
+            // 増車の内容テキスト（〇の下側に出力）
+            const addText = v('app_reason_add_text');
+            if (addText) {
+                drawText(addText, 220, reasonY - 47, );
+            }
+        } else if (reasonVal === 'other') {
+            // その他
+            drawCircleMark(590, reasonY);
+        }
+
+        // 4. 代替車両情報・車台番号
+        // 車名
+        drawText(v('sub_car_name'), 390, reasonY-30); 
+        // 登録年月 (数値ではなく文字列として出力)
+        drawText(v('sub_reg_year'), 660, reasonY-30); // 年
+        drawText(v('sub_reg_month'), 720, reasonY-30); // 月
+        // 車台番号
+        drawText(v('chassis_num'), 390, reasonY - 45);
+
+        // 5. 保管場所の種類・収容台数（複数選択：チェックされた項目に丸を付与、座標は変更なし）
+        const typeY = height - 395;
+        const storageVals = getCheckboxes('storage_type');
+        const storageCoords = { lot: 220, garage: 290, rental: 360, single: 440, shared: 510 };
+        storageVals.forEach(val => {
+            if (storageCoords[val] != null) drawCircleMark(storageCoords[val], typeY);
+        });
+
+        // 総収容台数
+        drawText(v('capacity'), 660, typeY);
+
+        // 6. 保管場所の広さ
+        const dimY = height - 420;
+        drawText(v('dim_length'), 230, dimY); // 縦
+        drawText(v('dim_width'), 420, dimY);  // 横
+        drawText(v('dim_area'), 680, dimY);   // 面積
+
+        // --- ファイル出力 ---
+        const now = new Date();
+        const dateStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+        
+        let applicant = v('applicant_name') || '名称未設定';
+        // ファイル名に使えない文字をアンダースコアに置換
+        const safeApplicant = applicant.replace(/[\\/:*?"<>|]/g, '_');
+
+        // 「ダウンロードした年月日_申請者氏名_書類の名前.pdf」形式
+        const fileName = `${dateStr}_${safeApplicant}_現地調査報告書.pdf`;
+
+        const pdfDataUri = await pdfDoc.saveAsBase64({ dataUri: true });
+        const link = document.createElement('a');
+        link.href = pdfDataUri;
+        link.download = fileName;
+        link.click();
+    }
+
+    // ラジオボタン選択に応じて「その他」「増車」のテキスト入力を表示切替
+    (function () {
+        // 申請車種「その他」
+        const carTypeRadios = document.getElementsByName('car_type');
+        const carTypeOtherGroup = document.getElementById('car_type_other_text_group');
+        if (carTypeRadios && carTypeOtherGroup) {
+            const updateCarTypeOther = () => {
+                let show = false;
+                for (const r of carTypeRadios) {
+                    if (r.checked && r.value === 'other') {
+                        show = true;
+                        break;
+                    }
+                }
+                carTypeOtherGroup.style.display = show ? 'block' : 'none';
+            };
+            for (const r of carTypeRadios) {
+                r.addEventListener('change', updateCarTypeOther);
+            }
+            // 初期状態の反映
+            updateCarTypeOther();
+        }
+
+        // 申請事由「増車」
+        const appReasonRadios = document.getElementsByName('app_reason');
+        const appReasonAddGroup = document.getElementById('app_reason_add_text_group');
+        if (appReasonRadios && appReasonAddGroup) {
+            const updateAppReasonAdd = () => {
+                let show = false;
+                for (const r of appReasonRadios) {
+                    if (r.checked && r.value === 'add_car') {
+                        show = true;
+                        break;
+                    }
+                }
+                appReasonAddGroup.style.display = show ? 'block' : 'none';
+            };
+            for (const r of appReasonRadios) {
+                r.addEventListener('change', updateAppReasonAdd);
+            }
+            // 初期状態の反映
+            updateAppReasonAdd();
+        }
+    })();
+</script>
+
+</body>
+</html>
