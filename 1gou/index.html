@@ -1,1 +1,596 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自動車登録申請書作成アプリ（第1号様式）</title>
+    <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+    <script src="https://unpkg.com/@pdf-lib/fontkit/dist/fontkit.umd.min.js"></script>
+    <style>
+        /* 既存スタイル */
+        body { font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background-color: #fcfcfc; color: #333; }
+        .container { background: white; padding: 40px; border-radius: 4px; border: 1px solid #eee; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        h1 { text-align: center; color: #333; font-size: 24px; margin-bottom: 20px; font-weight: bold; }
+        h2 { font-size: 16px; border-bottom: 2px solid #007BFF; padding-bottom: 5px; margin-top: 30px; margin-bottom: 15px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 16px; color: #444; }
+        input[type="text"], select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 16px; color: #333; }
+        .row { display: flex; gap: 15px; margin-bottom: 15px; align-items: flex-end; }
+        .col { flex: 1; }
+        button { display: block; width: 100%; padding: 18px; background-color: #007BFF; color: white; border: none; border-radius: 4px; font-size: 20px; cursor: pointer; margin-top: 40px; font-weight: bold; }
+        button:hover { background-color: #0056b3; }
+        .hint { font-size: 12px; color: #666; margin-top: 4px; }
+        .sub-section { font-size: 14px; font-weight: bold; color: #555; margin-top: 18px; margin-bottom: 8px; }
+        .label-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+        .inline-check { font-size: 14px; font-weight: normal; color: #555; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        .inline-check input { width: auto; cursor: pointer; }
 
+        /* 申請人ブロック：中項目ごとに枠で区切り見やすく */
+        .applicant-section { margin-top: 8px; }
+        .applicant-block {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 14px 18px;
+            margin-bottom: 14px;
+        }
+        .applicant-block:last-child { margin-bottom: 0; }
+        .applicant-block .block-title-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 0 0 12px 0;
+        }
+        .applicant-block .block-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #1e3a5f;
+            border-left: 4px solid #007BFF;
+            padding: 6px 0 6px 12px;
+            margin: 0;
+            background: #eef5ff;
+            border-radius: 0 4px 4px 0;
+            flex: 1;
+            min-width: 0;
+        }
+        .applicant-block .block-check {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: #555;
+            white-space: nowrap;
+        }
+        .applicant-block .block-check input { width: auto; margin: 0; cursor: pointer; }
+        .applicant-block .form-group { margin-bottom: 12px; }
+        .applicant-block .form-group:last-child { margin-bottom: 0; }
+        .applicant-block label { font-size: 14px; margin-bottom: 6px; }
+
+        /* 共通レイアウト: 第3号様式ベース（上書き用） */
+        body {
+            font-family: "Helvetica Neue", Arial, sans-serif;
+            max-width: 950px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        p.subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+        h2 {
+            font-size: 16px;
+            background: #eef5ff;
+            border-left: 5px solid #007BFF;
+            padding: 8px 10px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 5px;
+        }
+        .hint {
+            font-size: 11px;
+            color: #888;
+            margin-top: 2px;
+            margin-bottom: 0;
+            line-height: 1.2;
+        }
+        input[type="text"], select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 15px;
+            background-color: #fff;
+        }
+        .row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .col {
+            flex: 1;
+            min-width: 0;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 18px;
+            cursor: pointer;
+            margin-top: 40px;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>自動車登録申請書（第1号様式）</h1>
+    <p style="text-align:center; font-size:14px; color:#666;">新規登録・移転登録・変更登録など</p>
+    
+    <form id="pdfForm">
+        
+        <h2>基本情報</h2>
+        <div class="form-group">
+            <label>①業務種別</label>
+            <select id="job_type">
+                <option value="">選択</option>
+                <option value="1">１新登検</option>
+                <option value="2">２新登検完検切</option>
+                <option value="3">３移転</option>
+                <option value="4">４変更</option>
+                <option value="5">５更正</option>
+                <option value="6">６番号変更</option>
+                <option value="7">７構造変更</option>
+                <option value="8">８記載変更</option>
+                <option value="9">９予備検</option>
+                <option value="11">11所有者変更記録</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>６番号指示</label>
+            <div class="row" style="align-items: flex-end;">
+                <div class="col" style="flex: 0 0 80px;">
+                    <label class="hint" style="margin-bottom:4px;">種別</label>
+                    <input type="text" id="number_indication_type" maxlength="1" placeholder="1桁">
+                </div>
+                <div class="col" style="flex: 0 0 120px;">
+                    <label class="hint" style="margin-bottom:4px;">用途</label>
+                    <div style="display:flex; gap:6px;">
+                        <input type="text" id="number_indication_use_1" maxlength="1" placeholder="1">
+                        <input type="text" id="number_indication_use_2" maxlength="1" placeholder="2">
+                    </div>
+                </div>
+                <div class="col" style="flex: 0 0 120px;">
+                    <label class="hint" style="margin-bottom:4px;">標板</label>
+                    <div style="display:flex; gap:6px;">
+                        <input type="text" id="number_indication_hyo_1" maxlength="1" placeholder="1">
+                        <input type="text" id="number_indication_hyo_2" maxlength="1" placeholder="2">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h2>希望番号</h2>
+        <div class="form-group">
+            <div class="row" style="align-items: flex-end;">
+                <div class="col" style="flex: 0 0 100px;">
+                    <input type="text" id="hope_num_1" maxlength="3" placeholder="300">
+                </div>
+                <div class="col" style="flex: 0 0 60px;">
+                    <input type="text" id="hope_num_2" maxlength="1" placeholder="あ">
+                </div>
+                <div class="col" style="flex: 0 0 140px;">
+                    <input type="text" id="hope_num_3" maxlength="4" placeholder="0123">
+                </div>
+            </div>
+            <div class="hint">3桁 ＋ ひらがな ＋ 4桁</div>
+        </div>
+
+        <h2>車両情報</h2>
+        <div class="form-group">
+            <label>㉑自動車登録番号（ナンバープレート）</label>
+            <div class="row">
+                <input type="text" id="car_num_1" placeholder="品川" style="flex:2">
+                <input type="text" id="car_num_2" placeholder="300" style="flex:2">
+                <input type="text" id="car_num_3" placeholder="あ" style="flex:1">
+                <input type="text" id="car_num_4" maxlength="4" placeholder="1234" style="flex:3">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>㉒車台番号（下7桁）</label>
+            <input type="text" id="chassis_num" maxlength="7" placeholder="ABC1234">
+        </div>
+
+        <h2>所有者欄</h2>
+        <div class="form-group">
+            <label>氏名又は名称</label>
+            <input type="text" id="owner_name" placeholder="山田 太郎">
+        </div>
+        <div class="form-group">
+            <label>所有者コード</label>
+            <input type="text" id="owner_code" maxlength="5" placeholder="5桁" pattern="[0-9]*" inputmode="numeric" style="width: 120px;">
+        </div>
+        <div class="form-group">
+            <label>住所（3つのマス）</label>
+            <div class="row" style="align-items: flex-end;">
+                <div class="col">
+                    <label class="hint" style="margin-bottom:4px;">都道府県町村小字コード</label>
+                    <input type="text" id="owner_address_code" placeholder="都道府県町村小字コード">
+                </div>
+                <div class="col">
+                    <label class="hint" style="margin-bottom:4px;">丁目</label>
+                    <input type="text" id="owner_chome" placeholder="丁目">
+                </div>
+                <div class="col">
+                    <label class="hint" style="margin-bottom:4px;">番地</label>
+                    <input type="text" id="owner_banchi" placeholder="番地">
+                </div>
+            </div>
+        </div>
+
+        <h2>使用者欄</h2>
+        <div class="form-group">
+            <div class="label-row">
+                <label>氏名又は名称</label>
+                <label class="inline-check"><input type="checkbox" id="check_user_same_as_owner"> 所有者と同じ</label>
+            </div>
+            <input type="text" id="user_name" placeholder="山田 太郎">
+        </div>
+        <div class="form-group">
+            <div class="label-row">
+                <label>住所（3つのマス）</label>
+                <label class="inline-check"><input type="checkbox" id="check_user_same_as_owner_addr"> 所有者と同じ</label>
+            </div>
+            <div class="row" style="align-items: flex-end;">
+                <div class="col">
+                    <label class="hint" style="margin-bottom:4px;">都道府県町村小字コード</label>
+                    <input type="text" id="user_address_code" placeholder="都道府県町村小字コード">
+                </div>
+                <div class="col">
+                    <label class="hint" style="margin-bottom:4px;">丁目</label>
+                    <input type="text" id="user_chome" placeholder="丁目">
+                </div>
+                <div class="col">
+                    <label class="hint" style="margin-bottom:4px;">番地</label>
+                    <input type="text" id="user_banchi" placeholder="番地">
+                </div>
+            </div>
+        </div>
+
+        <h2>使用の本拠の位置</h2>
+        <div class="form-group">
+            <div class="label-row">
+                <label>住所（3つのマス）</label>
+                <label class="inline-check"><input type="checkbox" id="check_base_same_as_user"> 使用者住所と同じ</label>
+            </div>
+            <div class="row" style="align-items: flex-end;">
+                <div class="col">
+                    <label class="hint" style="margin-bottom:4px;">都道府県町村小字コード</label>
+                    <input type="text" id="base_address_code" placeholder="都道府県町村小字コード">
+                </div>
+                <div class="col">
+                    <label class="hint" style="margin-bottom:4px;">丁目</label>
+                    <input type="text" id="base_chome" placeholder="丁目">
+                </div>
+                <div class="col">
+                    <label class="hint" style="margin-bottom:4px;">番地</label>
+                    <input type="text" id="base_banchi" placeholder="番地">
+                </div>
+            </div>
+        </div>
+
+        <h2>整備工場コード</h2>
+        <div class="form-group">
+            <label>整備工場コード（2桁－5桁）</label>
+            <div class="row" style="align-items: center; gap: 8px;">
+                <input type="text" id="factory_code_1" maxlength="2" placeholder="2桁" style="width: 60px; text-align: center;">
+                <span style="color:#666;">－</span>
+                <input type="text" id="factory_code_2" maxlength="5" placeholder="5桁" style="width: 90px; text-align: center;">
+            </div>
+        </div>
+
+        <h2>申請人</h2>
+        <div class="applicant-section">
+            <div class="applicant-block">
+                <div class="block-title-row">
+                    <div class="block-title">新所有者・現所有者</div>
+                    <label class="block-check"><input type="checkbox" id="check_same_ininjo_new_owner" onchange="toggleSameIninjo('new_owner')"> 委任状記載事項に同じ</label>
+                </div>
+                <div class="form-group">
+                    <label>氏名又は名称</label>
+                    <input type="text" id="app_new_owner_name" placeholder="山田 太郎">
+                </div>
+                <div class="form-group">
+                    <label>住所</label>
+                    <input type="text" id="app_new_owner_address" placeholder="東京都千代田区...">
+                </div>
+            </div>
+
+            <div class="applicant-block">
+                <div class="block-title-row">
+                    <div class="block-title">使用者</div>
+                    <label class="block-check"><input type="checkbox" id="check_same_ininjo_user" onchange="toggleSameIninjo('user')"> 委任状記載事項に同じ</label>
+                </div>
+                <div class="form-group">
+                    <label>氏名又は名称</label>
+                    <input type="text" id="app_user_name" placeholder="山田 太郎">
+                </div>
+                <div class="form-group">
+                    <label>住所</label>
+                    <input type="text" id="app_user_address" placeholder="東京都千代田区...">
+                </div>
+            </div>
+
+            <div class="applicant-block">
+                <div class="block-title-row">
+                    <div class="block-title">旧所有者</div>
+                    <label class="block-check"><input type="checkbox" id="check_same_ininjo_old_owner" onchange="toggleSameIninjo('old_owner')"> 委任状記載事項に同じ</label>
+                </div>
+                <div class="form-group">
+                    <label>氏名又は名称</label>
+                    <input type="text" id="app_old_owner_name" placeholder="山田 太郎">
+                </div>
+                <div class="form-group">
+                    <label>住所</label>
+                    <input type="text" id="app_old_owner_address" placeholder="東京都千代田区...">
+                </div>
+            </div>
+
+            <div class="applicant-block">
+                <div class="block-title-row">
+                    <div class="block-title">使用者本拠の位置</div>
+                    <label class="block-check"><input type="checkbox" id="check_same_user_address_base" onchange="toggleSameUserAddressBase()"> 使用者住所に同じ</label>
+                </div>
+                <div class="form-group">
+                    <label>住所</label>
+                    <input type="text" id="app_user_base_address" placeholder="東京都千代田区...">
+                </div>
+            </div>
+        </div>
+
+        <button type="button" onclick="generatePDF()">PDFを作成してダウンロード</button>
+    </form>
+</div>
+
+<script>
+    const { PDFDocument, rgb } = PDFLib;
+
+    const SAME_ININJO = '委任状記載事項に同じ';
+    const SAME_USER_ADDRESS = '使用者住所に同じ';
+
+    function toggleSameIninjo(which) {
+        const ids = {
+            new_owner: ['app_new_owner_name', 'app_new_owner_address'],
+            user: ['app_user_name', 'app_user_address'],
+            old_owner: ['app_old_owner_name', 'app_old_owner_address']
+        };
+        const checkIds = { new_owner: 'check_same_ininjo_new_owner', user: 'check_same_ininjo_user', old_owner: 'check_same_ininjo_old_owner' };
+        const names = ids[which];
+        const chk = document.getElementById(checkIds[which]);
+        const value = chk.checked ? SAME_ININJO : '';
+        names.forEach(id => {
+            const el = document.getElementById(id);
+            el.value = value;
+            el.readOnly = chk.checked;
+        });
+    }
+
+    function toggleSameUserAddressBase() {
+        const chk = document.getElementById('check_same_user_address_base');
+        const el = document.getElementById('app_user_base_address');
+        el.value = chk.checked ? SAME_USER_ADDRESS : '';
+        el.readOnly = chk.checked;
+    }
+
+    async function generatePDF() {
+        let pdfBytes, fontBytes;
+        try {
+            // 第1号様式のPDFを読み込みます
+            const pdfUrl = 'template.pdf'; 
+            const fontUrl = 'font.ttf'; 
+            [pdfBytes, fontBytes] = await Promise.all([
+                fetch(pdfUrl).then(res => res.arrayBuffer()),
+                fetch(fontUrl).then(res => res.arrayBuffer())
+            ]);
+        } catch (e) {
+            alert("template.pdf (第1号様式) または font.ttf が見つかりません。");
+            return;
+        }
+
+        const pdfDoc = await PDFDocument.load(pdfBytes);
+        pdfDoc.registerFontkit(fontkit);
+        const customFont = await pdfDoc.embedFont(fontBytes);
+        const page = pdfDoc.getPages()[0];
+        
+        // ページサイズを取得（座標計算用）
+        const { width, height } = page.getSize();
+
+        // テキスト描画用ヘルパー関数
+        // spacing: 文字間のスペース（OCRマスの幅に合わせる）
+        const drawText = (text, x, y, size = 10, spacing = 0) => {
+            if (!text) return;
+            text = String(text); // 文字列化
+            if (spacing > 0) {
+                for (let i = 0; i < text.length; i++) {
+                    // OCRマス目は等幅で配置するため、1文字ずつずらして描画
+                    page.drawText(text[i], { x: x + (i * spacing), y, size, font: customFont, color: rgb(0, 0, 0) });
+                }
+            } else {
+                page.drawText(text, { x, y, size, font: customFont, color: rgb(0, 0, 0) });
+            }
+        };
+
+        const v = (id) => document.getElementById(id).value;
+
+        // ==========================================
+        //  座標設定 (第1号様式のレイアウトに合わせて調整)
+        //  ※お手持ちのPDFのスキャン状況により、
+        //  baseY や offsetX を微調整してください。
+        // ==========================================
+        
+        // OCRシートのマスの幅（約17〜18ポイント）
+        const BOX_W = 17.1; 
+        
+        // 行の高さ（Y座標）の基準
+        // PDF-Libは左下が(0,0)です。A4横向き想定か縦向きかで大きく変わります。
+        // 一般的なOCRシート(A4横配置)を想定したY座標です。ズレる場合はここを変更してください。
+        const Y_ROW_TOP = 534;   // 業務種別など
+        const Y_ROW_CAR = 470;   // 自動車登録番号
+        const Y_ROW_ADD = 250;   // 住所・氏名欄
+        const Y_ROW_BTM = 100;   // 走行距離など
+
+        // 「１」を出力する座標（チェック時のみ別位置に出力する場合はここを変更）
+        const ONE_USER_NAME = { x: 350, y: Y_ROW_ADD - 20 };   // 使用者欄「所有者と同じ」氏名の「１」
+        const ONE_USER_ADDR = { x: 350, y: Y_ROW_ADD - 45 };   // 使用者欄「所有者と同じ」住所の「１」
+        const ONE_BASE_SAME = { x: 350, y: Y_ROW_ADD - 75 };   // 使用の本拠「使用者住所と同じ」の「１」
+
+        // ①業務種別（右詰め：右端 127 + 2*BOX_W に合わせる）
+        (function() {
+            const jobVal = v('job_type');
+            if (!jobVal) return;
+            const rightEdge = 127 + 2 * BOX_W;
+            const startX = rightEdge - (String(jobVal).length * BOX_W);
+            drawText(jobVal, startX, Y_ROW_TOP, 14, BOX_W);
+        })();
+
+        // ６番号指示（種別1桁・用途2桁・標板2桁）
+        const Y_NUMBER_IND = Y_ROW_TOP ;
+        drawText(v('number_indication_type'), 317, Y_NUMBER_IND, 14, BOX_W);
+        drawText(v('number_indication_use_1'), 342, Y_NUMBER_IND, 14, BOX_W);
+        drawText(v('number_indication_use_2'), 368, Y_NUMBER_IND, 14, BOX_W);
+        drawText(v('number_indication_hyo_1'), 395.5, Y_NUMBER_IND, 14, BOX_W);
+        drawText(v('number_indication_hyo_2'),420.5, Y_NUMBER_IND, 14, BOX_W);
+
+        // 希望番号（3桁＋1桁＋4桁）
+        const Y_HOPE = Y_ROW_TOP - 38;
+        drawText(v('hope_num_1'), 140, Y_HOPE, 14, BOX_W);
+        drawText(v('hope_num_2'), 208, Y_HOPE, 14, BOX_W);
+        drawText(v('hope_num_3'), 240, Y_HOPE, 14, BOX_W);
+
+        // ㉑自動車登録番号 (地域、分類、ひらがな、一連番号)
+        // 座標は画像のマス目に合わせて調整
+        const CAR_Y = Y_ROW_CAR-19.7; 
+        drawText(v('car_num_1'), 43,  CAR_Y, 14, 31);     // 地域名（漢字）はマスが広い
+        drawText(v('car_num_2'), 169, CAR_Y, 14, BOX_W);  // 3桁数字
+        drawText(v('car_num_3'), 237, CAR_Y, 14);         // ひらがな
+        drawText(v('car_num_4'), 267.5, CAR_Y, 14, BOX_W);  // 4桁一連番号
+
+        // ㉒車台番号（下7桁）
+        drawText(v('chassis_num'), 350, CAR_Y, 14, BOX_W);
+
+        // 所有者欄（氏名・所有者コード5桁・住所3マス）
+        const Y_OWNER = Y_ROW_ADD + 140;
+        drawText(v('owner_name'), 96, Y_OWNER+2,14, 31);
+        drawText(v('owner_code'), 727, Y_OWNER +2, 14, BOX_W);
+        drawText(v('owner_address_code'), 89.5, Y_OWNER - 32,14, BOX_W);
+        drawText(v('owner_chome'), 299, Y_OWNER - 32, 14,BOX_W);
+        drawText(v('owner_banchi'), 342, Y_OWNER - 32, 14,BOX_W);
+
+        // 使用者欄（氏名・住所3マス）※「所有者と同じ」チェック時は「１」を ONE_USER_NAME / ONE_USER_ADDR の位置に出力
+        const Y_USER = Y_ROW_ADD +50;
+        const userSameName = document.getElementById('check_user_same_as_owner').checked;
+        const userSameAddr = document.getElementById('check_user_same_as_owner_addr').checked;
+        if (userSameName) {
+            drawText('１', 44, Y_USER, 11);
+        } else {
+            drawText(v('user_name'), 96, Y_USER-3,14, 31);
+        }
+        if (userSameAddr) {
+            drawText('１', 44, Y_USER - 43, 11);
+        } else {
+            drawText(v('user_address_code'), 89.5, Y_USER - 43, 14,BOX_W);
+            drawText(v('user_chome'), 299, Y_USER - 43, 14, BOX_W);
+            drawText(v('user_banchi'), 342, Y_USER - 43, 14, BOX_W);
+        }
+
+        // 使用の本拠の位置（住所3マス）※「使用者住所と同じ」チェック時は「１」を ONE_BASE_SAME の位置に出力
+        const Y_BASE = Y_USER - 91;
+        const baseSameAsUser = document.getElementById('check_base_same_as_user').checked;
+        if (baseSameAsUser) {
+            drawText('１', 44, Y_BASE, 11);
+        } else {
+            drawText(v('base_address_code'), 89.5, Y_BASE,14, BOX_W);
+            drawText(v('base_chome'), 299, Y_BASE,14, BOX_W);
+            drawText(v('base_banchi'), 342, Y_BASE,14, BOX_W);
+        }
+
+        // 整備工場コード（2桁－5桁）
+        const Y_FACTORY = Y_BASE - 45;
+        drawText(v('factory_code_1'), 567, Y_FACTORY, 14, BOX_W);
+        drawText(v('factory_code_2'), 608, Y_FACTORY, 14, BOX_W);
+
+        // 申請人（新所有者・使用者・使用者本拠の位置：各氏名・住所）
+        const Y_APP_BASE = Y_ROW_ADD - 169;
+        const APP_LINE = 21;
+        let yApp = Y_APP_BASE;
+        drawText(v('app_new_owner_name'), 100, yApp, 8);
+        drawText(v('app_new_owner_address'), 100, yApp - APP_LINE, 8);
+        
+        drawText(v('app_user_name'), 100, yApp - APP_LINE*2, 8);
+        drawText(v('app_user_address'), 100, yApp - APP_LINE*3, 8);
+        
+        drawText(v('app_old_owner_name'), 380, yApp + APP_LINE*0.6, 8);
+        drawText(v('app_old_owner_address'), 380, yApp , 8);
+        
+        drawText(v('app_user_base_address'), 660, yApp - APP_LINE, 8);
+
+        // --- ファイル名生成とダウンロード ---
+        const now = new Date();
+        const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+        
+        // 所有者氏名をファイル名に使用
+        let ownerName = v('owner_name') || '未入力';
+        // ファイル名で使えない文字をアンダースコアに置換
+        const safeOwnerName = ownerName.replace(/[\\/:*?"<>|]/g, '_');
+
+        // 「ダウンロードした年月日_所有者氏名_書類名.pdf」形式
+        const fileName = `${dateStr}_${safeOwnerName}_第1号様式.pdf`;
+
+        const pdfDataUri = await pdfDoc.saveAsBase64({ dataUri: true });
+        const link = document.createElement('a');
+        link.href = pdfDataUri;
+        link.download = fileName;
+        link.click();
+    }
+</script>
+</body>
+</html>
