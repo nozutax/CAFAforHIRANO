@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自動車検査証記入申請書データ入力アプリ（軽専用1号様式）</title>
+    <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+    <script src="https://unpkg.com/@pdf-lib/fontkit/dist/fontkit.umd.min.js"></script>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f4f4f4; }
+        .container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #333; font-size: 24px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; }
+        input[type="text"], input[type="number"] { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 16px; }
+        .box-input { letter-spacing: 5px; }
+        button { display: block; width: 100%; padding: 15px; background-color: #007BFF; color: white; border: none; border-radius: 4px; font-size: 18px; cursor: pointer; margin-top: 20px; }
+        button:hover { background-color: #0056b3; }
+        .row { display: flex; gap: 10px; align-items: center; }
+        .col { flex: 1; }
+        .note { font-size: 0.8em; color: #666; margin-top: 5px; }
+        .hyphen { font-weight: bold; padding: 0 5px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>自動車検査証記入申請書データ入力アプリ（軽専用1号様式）</h1>
+    <form id="pdfForm">
+        
+        <!-- 番号提示 用途（同一Y位置） -->
+        <div class="row">
+            <div class="col">
+                <div class="form-group">
+                    <label>番号提示 用途1</label>
+                    <input type="text" id="number_purpose_1" maxlength="1" inputmode="numeric" placeholder="1文字">
+                </div>
+            </div>
+            <div class="col">
+                <div class="form-group">
+                    <label>番号提示 用途2</label>
+                    <input type="text" id="number_purpose_2" maxlength="1" inputmode="numeric" placeholder="1文字">
+                </div>
+            </div>
+            <div class="col">
+                <div class="form-group">
+                    <label>番号提示 用途3</label>
+                    <input type="text" id="number_purpose_3" maxlength="1" inputmode="numeric" placeholder="1文字">
+                </div>
+            </div>
+            <div class="col">
+                <div class="form-group">
+                    <label>番号提示 用途4</label>
+                    <input type="text" id="number_purpose_4" maxlength="1" inputmode="numeric" placeholder="1文字">
+                </div>
+            </div>
+        </div>
+
+        <!-- 希望車両番号 -->
+        <div class="form-group">
+            <label>希望車両番号</label>
+            <div class="row">
+                <input type="text" id="hope_car_num_1" placeholder="地域名" style="flex:2">
+                <input type="text" id="hope_car_num_2" placeholder="123" style="flex:1">
+                <input type="text" id="hope_car_num_3" placeholder="あ" style="flex:0.5">
+                <input type="text" id="hope_car_num_4" placeholder="1234" style="flex:2">
+                <input type="text" id="hope_car_num_5" placeholder="小板" style="flex:0.5">
+            </div>
+        </div>
+
+        <!-- 車両情報 -->
+        <div class="form-group">
+            <label>車両番号</label>
+            <div class="row">
+                <input type="text" id="car_num_1" placeholder="地域名" style="flex:2">
+                <input type="text" id="car_num_2" placeholder="123" style="flex:1">
+                <input type="text" id="car_num_3" placeholder="あ" style="flex:0.5">
+                <input type="text" id="car_num_4" placeholder="1234" style="flex:2">
+                <input type="text" id="car_num_5" placeholder="小板" style="flex:0.5">
+            </div>
+        </div>
+
+        <!-- 車台番号 7文字制限 -->
+        <div class="form-group">
+            <label>車台番号 (下7桁)</label>
+            <input type="text" id="chassis_num" maxlength="7" class="box-input" placeholder="最大7文字 (例: AB31234)">
+        </div>
+
+        <!-- 整備工場コード 2桁と5桁制限 -->
+        <div class="form-group">
+            <label>整備工場コード</label>
+            <div class="row">
+                <input type="text" id="factory_code_1" maxlength="2" inputmode="numeric" placeholder="2桁" style="flex:1">
+                <span class="hyphen">-</span>
+                <input type="text" id="factory_code_2" maxlength="5" inputmode="numeric" placeholder="5桁" style="flex:2">
+            </div>
+        </div>
+
+        <!-- 住所・氏名欄 -->
+        <hr>
+        <div class="form-group">
+            <label>使用者 氏名又は名称</label>
+            <input type="text" id="user_name" placeholder="山田 太郎">
+        </div>
+        <div class="form-group">
+            <label>使用者住所</label>
+            <div class="row">
+                <input type="text" id="user_address_1" maxlength="12" placeholder="12文字以下" style="flex:2">
+                <input type="text" id="user_address_2" maxlength="2" placeholder="2文字以下" style="flex:0.3">
+                <input type="text" id="user_address_3" maxlength="22" placeholder="22文字以下" style="flex:2">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>申請者（使用者）氏名又は名称</label>
+            <input type="text" id="applicant_name" placeholder="山田 太郎">
+        </div>
+        <div class="form-group">
+            <label>申請者 住所</label>
+            <input type="text" id="applicant_address" placeholder="東京都...">
+        </div>
+        
+        <!-- 受検者（履歴機能付き） -->
+        <div class="form-group">
+            <label>受検者 氏名又は名称</label>
+            <input type="text" id="examinee_name" list="examinee_name_list" autocomplete="off" placeholder="入力すると履歴候補が出ます">
+            <datalist id="examinee_name_list"></datalist>
+        </div>
+        <div class="form-group">
+            <label>受検者 住所</label>
+            <input type="text" id="examinee_address" list="examinee_address_list" autocomplete="off" placeholder="入力すると履歴候補が出ます">
+            <datalist id="examinee_address_list"></datalist>
+        </div>
+
+        <button type="button" onclick="generatePDF()">PDFを作成してダウンロード</button>
+    </form>
+</div>
+
+<script>
+    const { PDFDocument, rgb } = PDFLib;
+
+    // --- 履歴保存機能 ---
+    const STORAGE_KEY_NAME = 'examinee_name_history';
+    const STORAGE_KEY_ADDR = 'examinee_address_history';
+
+    window.onload = function() {
+        loadHistory(STORAGE_KEY_NAME, 'examinee_name_list');
+        loadHistory(STORAGE_KEY_ADDR, 'examinee_address_list');
+    };
+
+    function loadHistory(key, datalistId) {
+        const history = JSON.parse(localStorage.getItem(key) || '[]');
+        const datalist = document.getElementById(datalistId);
+        datalist.innerHTML = '';
+        history.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item;
+            datalist.appendChild(option);
+        });
+    }
+
+    function saveHistory(key, value) {
+        if (!value) return;
+        let history = JSON.parse(localStorage.getItem(key) || '[]');
+        history = history.filter(item => item !== value);
+        history.unshift(value);
+        if (history.length > 20) history.pop();
+        localStorage.setItem(key, JSON.stringify(history));
+    }
+    // ------------------
+
+    async function generatePDF() {
+        // 1. テンプレートPDFとフォントの読み込み
+        let pdfBytes, fontBytes;
+        
+        try {
+            const pdfUrl = 'template.pdf';
+            const fontUrl = 'font.ttf';
+            
+            [pdfBytes, fontBytes] = await Promise.all([
+                fetch(pdfUrl).then(res => res.arrayBuffer()),
+                fetch(fontUrl).then(res => res.arrayBuffer())
+            ]);
+        } catch (e) {
+            alert("ファイルの読み込みに失敗しました。template.pdf と font.ttf が同じフォルダにあるか確認してください。");
+            return;
+        }
+
+        // 2. PDFドキュメントの生成
+        const pdfDoc = await PDFDocument.load(pdfBytes);
+        pdfDoc.registerFontkit(fontkit);
+        const customFont = await pdfDoc.embedFont(fontBytes);
+        const page = pdfDoc.getPages()[0];
+        
+        // 描画関数
+        const drawText = (text, x, y, size = 10, spacing = 0) => {
+            if (!text) return;
+            if (spacing > 0) {
+                for (let i = 0; i < text.length; i++) {
+                    page.drawText(text[i], {
+                        x: x + (i * spacing),
+                        y: y,
+                        size: size,
+                        font: customFont,
+                        color: rgb(0, 0, 0),
+                    });
+                }
+            } else {
+                page.drawText(text, { x, y, size, font: customFont, color: rgb(0, 0, 0) });
+            }
+        };
+
+        const v = (id) => document.getElementById(id).value;
+
+        // === 座標のマッピング ===
+
+        // 1. 番号提示 用途1〜4（同一Y=535）
+        drawText(v('number_purpose_1'), 80, 535, 12);
+        drawText(v('number_purpose_2'), 180, 535, 12);
+        drawText(v('number_purpose_3'), 280, 535, 12);
+        drawText(v('number_purpose_4'), 380, 535, 12);
+
+        const BOX_WIDTH = 17;
+
+        // 2. 希望車両番号（Y=510）
+        drawText(v('hope_car_num_1'), 40, 510, 12, 30);
+        drawText(v('hope_car_num_2'), 170, 510, 12, BOX_WIDTH);
+        drawText(v('hope_car_num_3'), 240, 510, 12);
+        drawText(v('hope_car_num_4'), 270, 510, 12, BOX_WIDTH);
+        drawText(v('hope_car_num_5'), 345, 510, 12);
+
+        // 3. 車両番号 
+        drawText(v('car_num_1'), 40, 485, 12, 30); 
+        drawText(v('car_num_2'), 170, 485, 12, BOX_WIDTH);
+        drawText(v('car_num_3'), 240, 485, 12);
+        drawText(v('car_num_4'), 270, 485, 12, BOX_WIDTH);
+        drawText(v('car_num_5'), 345, 485, 12);
+
+        // 4. 車台番号
+        drawText(v('chassis_num'), 380, 485, 12, BOX_WIDTH);
+
+        // 5. 整備工場コード
+        drawText(v('factory_code_1'), 698, 485, 12, BOX_WIDTH);
+        drawText(v('factory_code_2'), 740, 485, 12, BOX_WIDTH);
+
+        // 8. 氏名・住所
+        const LEFT_X = 150;
+
+        drawText(v('user_name'), LEFT_X, 370, 10);
+        drawText(v('user_address_1'), 50, 350, 10);
+        drawText(v('user_address_2'), 200, 350, 10);
+        drawText(v('user_address_3'), 230, 350, 10);
+        
+        drawText(v('applicant_name'), LEFT_X, 330, 10);
+        drawText(v('applicant_address'), LEFT_X, 290, 10);
+
+        drawText(v('examinee_name'), LEFT_X, 220, 10);
+        drawText(v('examinee_address'), LEFT_X, 180, 10);
+
+        // --- 履歴保存実行 ---
+        saveHistory(STORAGE_KEY_NAME, v('examinee_name'));
+        saveHistory(STORAGE_KEY_ADDR, v('examinee_address'));
+        loadHistory(STORAGE_KEY_NAME, 'examinee_name_list');
+        loadHistory(STORAGE_KEY_ADDR, 'examinee_address_list');
+
+        // 3. ファイル名の生成処理
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const dateStr = `${year}${month}${day}`;
+
+        let applicant = v('applicant_name');
+        if (!applicant) {
+            applicant = '名称未入力';
+        }
+        applicant = applicant.replace(/[\\/:*?"<>|]/g, '');
+
+        const fileName = `${dateStr}_軽専用第1号様式_${applicant}.pdf`;
+
+        // 4. ダウンロード実行
+        const pdfDataUri = await pdfDoc.saveAsBase64({ dataUri: true });
+        const link = document.createElement('a');
+        link.href = pdfDataUri;
+        link.download = fileName;
+        link.click();
+    }
+</script>
+
+</body>
+</html>

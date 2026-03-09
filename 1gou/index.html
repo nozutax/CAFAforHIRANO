@@ -503,15 +503,15 @@
         // 希望番号（3桁＋1桁＋4桁）
         const Y_HOPE = Y_ROW_TOP - 38;
         drawText(v('hope_num_1'), 140, Y_HOPE, 14, BOX_W);
-        drawText(v('hope_num_2'), 208, Y_HOPE, 14, BOX_W);
+        drawText(v('hope_num_2'), 206, Y_HOPE, 14, BOX_W);
         drawText(v('hope_num_3'), 240, Y_HOPE, 14, BOX_W);
 
         // ㉑自動車登録番号 (地域、分類、ひらがな、一連番号)
         // 座標は画像のマス目に合わせて調整
-        const CAR_Y = Y_ROW_CAR-19.7; 
+        const CAR_Y = Y_ROW_CAR-21.7; 
         drawText(v('car_num_1'), 43,  CAR_Y, 14, 31);     // 地域名（漢字）はマスが広い
         drawText(v('car_num_2'), 169, CAR_Y, 14, BOX_W);  // 3桁数字
-        drawText(v('car_num_3'), 237, CAR_Y, 14);         // ひらがな
+        drawText(v('car_num_3'), 235, CAR_Y, 14);         // ひらがな
         drawText(v('car_num_4'), 267.5, CAR_Y, 14, BOX_W);  // 4桁一連番号
 
         // ㉒車台番号（下7桁）
