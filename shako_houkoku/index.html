@@ -227,12 +227,139 @@
             </div>
         </div>
 
-        <button type="button" onclick="generatePDF()">PDFを作成してダウンロード</button>
+        <button type="button" onclick="openConfirm()">入力内容を確認する</button>
     </form>
+</div>
+
+<div id="confirmModal">
+    <div class="confirm-dialog">
+        <h2>入力内容の確認</h2>
+        <p class="lead">全ての入力項目の内容を確認し、「保存（PDFダウンロード）」ボタンを押してください。</p>
+        <div class="confirm-body" id="confirmList"></div>
+        <div class="modal-actions">
+            <button type="button" class="btn-secondary" onclick="closeConfirm()">戻って修正する</button>
+            <button type="button" onclick="confirmAndDownload()">保存（PDFダウンロード）</button>
+        </div>
+    </div>
 </div>
 
 <script>
     const { PDFDocument, rgb } = PDFLib;
+
+    const DOCUMENT_NAME = '保管場所現地調査報告書';
+    const HISTORY_KEY = 'applicationHistory';
+    const v = (id) => document.getElementById(id).value;
+    let lastConfirmSnapshot = null;
+
+    function buildConfirmSnapshot(renderToDom = true) {
+        const snapshot = [];
+        const list = document.getElementById('confirmList');
+        if (renderToDom && list) list.innerHTML = '';
+
+        const form = document.getElementById('pdfForm');
+        const elements = form.querySelectorAll('input, select, textarea');
+        const seen = new Set();
+
+        elements.forEach(el => {
+            if (el.type === 'button' || el.type === 'submit') return;
+
+            let labelText = '';
+            const labelByFor = el.id ? form.querySelector(`label[for="${el.id}"]`) : null;
+            const closestLabel = el.closest('label');
+            const group = el.closest('.form-group');
+            const groupLabel = group ? group.querySelector('label') : null;
+
+            const labelSource = labelByFor || closestLabel || groupLabel;
+            if (labelSource) {
+                labelText = labelSource.textContent.trim().replace(/\s+/g, ' ');
+            }
+            if (!labelText) {
+                labelText = el.id || el.name || '項目';
+            }
+
+            const key = `${labelText}|${el.name}|${el.id}`;
+            if (seen.has(key)) return;
+            seen.add(key);
+
+            let valueText = '';
+            if (el.type === 'checkbox' || el.type === 'radio') {
+                valueText = el.checked ? '✔ チェックあり' : '— チェックなし';
+            } else if (el.tagName === 'SELECT') {
+                const opt = el.options[el.selectedIndex];
+                valueText = (opt && opt.text) ? opt.text : '';
+            } else {
+                valueText = el.value;
+            }
+            if (!valueText) valueText = '（未入力）';
+
+            const item = { label: labelText, value: valueText };
+            snapshot.push(item);
+
+            if (renderToDom && list) {
+                const row = document.createElement('div');
+                row.className = 'confirm-row';
+                row.innerHTML = `<span class="confirm-label">${item.label}</span><span class="confirm-value">${item.value}</span>`;
+                list.appendChild(row);
+            }
+        });
+
+        return snapshot;
+    }
+
+    function openConfirm() {
+        lastConfirmSnapshot = buildConfirmSnapshot(true);
+        document.getElementById('confirmModal').classList.add('active');
+    }
+
+    function closeConfirm() {
+        document.getElementById('confirmModal').classList.remove('active');
+    }
+
+    async function confirmAndDownload() {
+        try {
+            if (!lastConfirmSnapshot) {
+                lastConfirmSnapshot = buildConfirmSnapshot(false);
+            }
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hour = String(now.getHours()).padStart(2, '0');
+            const minute = String(now.getMinutes()).padStart(2, '0');
+
+            const savedAt = `${year}-${month}-${day} ${hour}:${minute}`;
+            const savedDateKey = `${year}${month}${day}`;
+            const applicantName = v('applicant_name') || '';
+
+            const record = {
+                id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+                savedAt,
+                savedDateKey,
+                applicantName,
+                documentName: DOCUMENT_NAME,
+                formSnapshot: lastConfirmSnapshot || []
+            };
+
+            const raw = localStorage.getItem(HISTORY_KEY);
+            let list = [];
+            if (raw) {
+                try {
+                    const parsed = JSON.parse(raw);
+                    if (Array.isArray(parsed)) list = parsed;
+                } catch (e) {
+                    console.warn('履歴JSONの解析に失敗したため、新しく作り直します。', e);
+                }
+            }
+            list.push(record);
+            localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+        } catch (e) {
+            console.error('申請履歴の保存に失敗しました。', e);
+            alert('申請履歴の保存に失敗しましたが、PDFのダウンロードは続行します。');
+        }
+
+        await generatePDF();
+        closeConfirm();
+    }
 
     async function generatePDF() {
         let pdfBytes, fontBytes;

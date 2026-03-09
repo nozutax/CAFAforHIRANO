@@ -88,7 +88,7 @@
             <div class="right-group">
                 <label for="user-name">氏名</label>
                 <input type="text" id="user-name" class="name-input" placeholder="氏名を入力" />
-                <button onclick="generateFinalPDF()" class="download-btn">完成PDF保存</button>
+                <button onclick="openConfirm()" class="download-btn">入力内容を確認する</button>
             </div>
         </div>
 
@@ -181,6 +181,24 @@
         <div style="display:flex; gap:10px; margin-top:16px;">
             <button style="flex:1; background:#007bff; color:white;" onclick="confirmText()">反映</button>
             <button style="flex:1;" onclick="closeTextModal()">中止</button>
+        </div>
+    </div>
+
+    <!-- 確認モーダル（氏名のみ） -->
+    <div id="confirmModal" class="modal-overlay" style="display:none; align-items:center; justify-content:center;">
+        <div class="confirm-dialog" style="max-width:480px; width:90%; background:white; padding:20px 24px; border-radius:10px; box-shadow:0 12px 30px rgba(0,0,0,0.35);">
+            <h2 style="margin:0 0 8px; font-size:16px;">入力内容の確認</h2>
+            <p class="lead" style="margin:0 0 12px; font-size:12px; color:#555;">現在の氏名と配置図を保存し、「保存（PDFダウンロード）」を押すとPDFが作成・ダウンロードされます。</p>
+            <div class="confirm-body" style="max-height:40vh; overflow:auto; font-size:13px; border-top:1px solid #e5e7eb; border-bottom:1px solid #e5e7eb; padding:8px 0; margin-top:4px;">
+                <div class="confirm-row" style="margin-bottom:6px;">
+                    <span class="confirm-label" style="font-weight:bold; display:inline-block; min-width:120px; color:#374151;">氏名</span>
+                    <span id="confirmUserName" class="confirm-value" style="color:#111827;"></span>
+                </div>
+            </div>
+            <div class="modal-actions" style="display:flex; justify-content:flex-end; gap:8px; margin-top:14px;">
+                <button type="button" class="btn-secondary" onclick="closeConfirm()" style="padding:6px 12px; font-size:13px; background:#e5e7eb; color:#111827; border-radius:4px; border:1px solid #d1d5db;">戻って修正する</button>
+                <button type="button" onclick="confirmAndDownloadFromShozaizu()" style="padding:6px 12px; font-size:13px; background:#007bff; color:white; border-radius:4px; border:none;">保存（PDFダウンロード）</button>
+            </div>
         </div>
     </div>
 
@@ -577,6 +595,74 @@
         document.getElementById('text-modal-overlay').addEventListener('click', closeTextModal);
         function undo() { shapes.pop(); hatchPoints=[]; redraw(); }
         function clearCanvas() { if(confirm("全消去しますか？")) { shapes = []; hatchPoints=[]; redraw(); } }
+
+        const HISTORY_KEY = 'applicationHistory';
+        const DOCUMENT_NAME = '車庫証明図';
+
+        function openConfirm() {
+            const nameInputEl = document.getElementById('user-name');
+            const rawName = nameInputEl ? nameInputEl.value.trim() : '';
+            document.getElementById('confirmUserName').textContent = rawName || '（未入力）';
+            const modal = document.getElementById('confirmModal');
+            if (!modal) return;
+            modal.style.display = 'flex';
+        }
+
+        function closeConfirm() {
+            const modal = document.getElementById('confirmModal');
+            if (!modal) return;
+            modal.style.display = 'none';
+        }
+
+        async function confirmAndDownloadFromShozaizu() {
+            try {
+                const nameInputEl = document.getElementById('user-name');
+                const rawName = nameInputEl ? nameInputEl.value.trim() : '';
+
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                const hour = String(now.getHours()).padStart(2, '0');
+                const minute = String(now.getMinutes()).padStart(2, '0');
+
+                const savedAt = `${year}-${month}-${day} ${hour}:${minute}`;
+                const savedDateKey = `${year}${month}${day}`;
+                const applicantName = rawName || '';
+
+                const record = {
+                    id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+                    savedAt,
+                    savedDateKey,
+                    applicantName,
+                    documentName: DOCUMENT_NAME,
+                    formSnapshot: [
+                        { label: '氏名', value: rawName || '（未入力）' }
+                    ]
+                };
+
+                try {
+                    const raw = localStorage.getItem(HISTORY_KEY);
+                    let list = [];
+                    if (raw) {
+                        const parsed = JSON.parse(raw);
+                        if (Array.isArray(parsed)) list = parsed;
+                    }
+                    list.push(record);
+                    localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+                } catch (e) {
+                    console.warn('申請履歴の保存に失敗しましたが、PDFのダウンロードは続行します。', e);
+                    alert('申請履歴の保存に失敗しましたが、PDFのダウンロードは続行します。');
+                }
+
+            } catch (e) {
+                console.error('申請履歴の保存に失敗しました。', e);
+                alert('申請履歴の保存に失敗しましたが、PDFのダウンロードは続行します。');
+            }
+
+            await generateFinalPDF();
+            closeConfirm();
+        }
 
         async function generateFinalPDF() {
             try {

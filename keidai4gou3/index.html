@@ -121,6 +121,78 @@
         button:hover {
             background-color: #0056b3;
         }
+
+        /* 確認モーダル */
+        #confirmModal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.35);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        #confirmModal.active {
+            display: flex;
+        }
+        .confirm-dialog {
+            background: #ffffff;
+            max-width: 720px;
+            width: 90%;
+            border-radius: 8px;
+            padding: 24px 28px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+        }
+        .confirm-dialog h2 {
+            margin: 0 0 12px;
+            font-size: 18px;
+        }
+        .confirm-dialog p.lead {
+            margin: 0 0 16px;
+            font-size: 13px;
+            color: #555;
+        }
+        .confirm-body {
+            max-height: 60vh;
+            overflow: auto;
+            font-size: 13px;
+            color: #444;
+            border-top: 1px solid #e5e7eb;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 10px 0;
+            margin-top: 4px;
+        }
+        .confirm-row {
+            margin-bottom: 6px;
+        }
+        .confirm-label {
+            font-weight: bold;
+            display: inline-block;
+            min-width: 140px;
+            color: #374151;
+        }
+        .confirm-value {
+            color: #111827;
+        }
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 18px;
+        }
+        .modal-actions button {
+            width: auto;
+            padding: 10px 16px;
+            font-size: 14px;
+            margin-top: 0;
+        }
+        .btn-secondary {
+            background-color: #e5e7eb;
+            color: #111827;
+        }
+        .btn-secondary:hover {
+            background-color: #d1d5db;
+        }
     </style>
 </head>
 <body>
@@ -339,12 +411,139 @@
             </div>
         </div>
 
-        <button type="button" onclick="generatePDF()">PDFを作成</button>
+        <button type="button" onclick="openConfirm()">入力内容を確認する</button>
     </form>
+</div>
+
+<div id="confirmModal">
+    <div class="confirm-dialog">
+        <h2>入力内容の確認</h2>
+        <p class="lead">全ての入力項目の内容を確認し、「保存（PDFダウンロード）」ボタンを押してください。</p>
+        <div class="confirm-body" id="confirmList"></div>
+        <div class="modal-actions">
+            <button type="button" class="btn-secondary" onclick="closeConfirm()">戻って修正する</button>
+            <button type="button" onclick="confirmAndDownload()">保存（PDFダウンロード）</button>
+        </div>
+    </div>
 </div>
 
 <script>
     const { PDFDocument, rgb } = PDFLib;
+
+    const DOCUMENT_NAME = '軽第4号様式の3';
+    const HISTORY_KEY = 'applicationHistory';
+    const v = (id) => document.getElementById(id).value;
+    let lastConfirmSnapshot = null;
+
+    function buildConfirmSnapshot(renderToDom = true) {
+        const snapshot = [];
+        const list = document.getElementById('confirmList');
+        if (renderToDom && list) list.innerHTML = '';
+
+        const form = document.getElementById('pdfForm');
+        const elements = form.querySelectorAll('input, select, textarea');
+        const seen = new Set();
+
+        elements.forEach(el => {
+            if (el.type === 'button' || el.type === 'submit') return;
+
+            let labelText = '';
+            const labelByFor = el.id ? form.querySelector(`label[for="${el.id}"]`) : null;
+            const closestLabel = el.closest('label');
+            const group = el.closest('.form-group');
+            const groupLabel = group ? group.querySelector('label') : null;
+
+            const labelSource = labelByFor || closestLabel || groupLabel;
+            if (labelSource) {
+                labelText = labelSource.textContent.trim().replace(/\s+/g, ' ');
+            }
+            if (!labelText) {
+                labelText = el.id || el.name || '項目';
+            }
+
+            const key = `${labelText}|${el.name}|${el.id}`;
+            if (seen.has(key)) return;
+            seen.add(key);
+
+            let valueText = '';
+            if (el.type === 'checkbox' || el.type === 'radio') {
+                valueText = el.checked ? '✔ チェックあり' : '— チェックなし';
+            } else if (el.tagName === 'SELECT') {
+                const opt = el.options[el.selectedIndex];
+                valueText = (opt && opt.text) ? opt.text : '';
+            } else {
+                valueText = el.value;
+            }
+            if (!valueText) valueText = '（未入力）';
+
+            const item = { label: labelText, value: valueText };
+            snapshot.push(item);
+
+            if (renderToDom && list) {
+                const row = document.createElement('div');
+                row.className = 'confirm-row';
+                row.innerHTML = `<span class="confirm-label">${item.label}</span><span class="confirm-value">${item.value}</span>`;
+                list.appendChild(row);
+            }
+        });
+
+        return snapshot;
+    }
+
+    function openConfirm() {
+        lastConfirmSnapshot = buildConfirmSnapshot(true);
+        document.getElementById('confirmModal').classList.add('active');
+    }
+
+    function closeConfirm() {
+        document.getElementById('confirmModal').classList.remove('active');
+    }
+
+    async function confirmAndDownload() {
+        try {
+            if (!lastConfirmSnapshot) {
+                lastConfirmSnapshot = buildConfirmSnapshot(false);
+            }
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hour = String(now.getHours()).padStart(2, '0');
+            const minute = String(now.getMinutes()).padStart(2, '0');
+
+            const savedAt = `${year}-${month}-${day} ${hour}:${minute}`;
+            const savedDateKey = `${year}${month}${day}`;
+            const applicantName = v('app_kanji') || v('txt_user_name') || '';
+
+            const record = {
+                id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+                savedAt,
+                savedDateKey,
+                applicantName,
+                documentName: DOCUMENT_NAME,
+                formSnapshot: lastConfirmSnapshot || []
+            };
+
+            const raw = localStorage.getItem(HISTORY_KEY);
+            let list = [];
+            if (raw) {
+                try {
+                    const parsed = JSON.parse(raw);
+                    if (Array.isArray(parsed)) list = parsed;
+                } catch (e) {
+                    console.warn('履歴JSONの解析に失敗したため、新しく作り直します。', e);
+                }
+            }
+            list.push(record);
+            localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+        } catch (e) {
+            console.error('申請履歴の保存に失敗しました。', e);
+            alert('申請履歴の保存に失敗しましたが、PDFのダウンロードは続行します。');
+        }
+
+        await generatePDF();
+        closeConfirm();
+    }
 
     async function generatePDF() {
         let pdfBytes, fontBytes;
