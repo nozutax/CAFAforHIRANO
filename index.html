@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>継続検査申請書 作成ポータル for HIRANO</title>
+    <title>自動車申請書 作成ポータル for HIRANO</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -54,20 +54,17 @@
     </script>
 </head>
 <body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex">
-    <aside class="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col fixed h-full z-20 transition-colors duration-300">
+    <!-- 左1/3: メニュー設定カラム -->
+    <aside class="w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col h-screen sticky top-0 z-20 transition-colors duration-300">
         <div class="p-5">
             <div class="flex items-center gap-2 text-primary mb-8 px-2">
                 <span class="material-symbols-outlined text-3xl font-bold">directions_car</span>
-                <h1 class="font-bold text-xl tracking-tight text-slate-900 dark:text-white italic">検査ポータル</h1>
+                <h1 class="font-bold text-xl tracking-tight text-slate-900 dark:text-white italic">ポータル</h1>
             </div>
             <nav class="space-y-1">
                 <a href="#" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-lg text-primary bg-blue-50 dark:bg-blue-900/20 group">
                     <span class="material-symbols-outlined text-[20px]">dashboard</span>
                     ダッシュボード
-                </a>
-                <a href="#" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-all group">
-                    <span class="material-symbols-outlined text-[20px]">description</span>
-                    申請書類作成
                 </a>
                 <a href="#" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-all group">
                     <span class="material-symbols-outlined text-[20px]">history</span>
@@ -92,21 +89,13 @@
         </div>
     </aside>
 
-    <main class="flex-1 ml-64 p-8 transition-colors duration-300">
+    <!-- 右2/3: 申請書センターカラム -->
+    <main class="flex-1 p-8 transition-colors duration-300">
         <header class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
             <div>
-                <h2 class="text-2xl font-bold text-slate-900 dark:text-white">継続検査申請書 作成ポータル</h2>
-                <p class="text-sm text-slate-500 dark:text-slate-400">作成したい様式を即座に開始できます</p>
+                <h2 class="text-2xl font-bold text-slate-900 dark:text-white">自動車申請書 作成ポータル</h2>
             </div>
             <div class="flex items-center gap-3">
-                <div class="relative group">
-                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors text-xl">search</span>
-                    <input type="text" placeholder="様式を検索..." class="pl-10 pr-4 py-2 w-64 text-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"/>
-                </div>
-                <button class="bg-primary hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all shadow-md shadow-blue-500/10">
-                    <span class="material-symbols-outlined text-lg">add_circle</span>
-                    新規作成
-                </button>
                 <button class="p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all" onclick="document.documentElement.classList.toggle('dark')">
                     <span class="material-symbols-outlined text-[20px]">dark_mode</span>
                 </button>
@@ -271,7 +260,7 @@
                             <p class="text-sm text-slate-500 dark:text-slate-400 leading-snug">解体届出書・重量税還付申請書</p>
                         </div>
                         <div class="p-4 pt-0">
-                            <a href="keidai4gou3/index.html" class="w-full border-2 border-slate-200 dark	border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 py-2 rounded-lg text-sm font-bold transition-colors flex items-center justify-center gap-2">
+                            <a href="keidai4gou3/index.html" class="w-full border-2 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 py-2 rounded-lg text-sm font-bold transition-colors flex items-center justify-center gap-2">
                                 作成する
                             </a>
                         </div>
@@ -280,7 +269,7 @@
                     <div class="flex flex-col bg-card-light dark:bg-card-dark rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-primary/50 transition-all overflow-hidden">
                         <div class="p-5 flex-1">
                             <div class="flex items-center gap-3 mb-3">
-                                <div class="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500">
+                                <div class="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex itemscenter justify-center text-slate-500">
                                     <span class="material-symbols-outlined">directions_car</span>
                                 </div>
                                 <h4 class="font-bold text-slate-900 dark:text-white leading-tight">軽専用 第1号様式</h4>
@@ -361,7 +350,7 @@
         </div>
 
         <footer class="mt-16 py-8 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between text-slate-400 text-xs font-medium">
-            <p>© 2024 継続検査申請書ポータル. All Rights Reserved.</p>
+            <p>© 2026 自動車申請書ポータル. All Rights Reserved。</p>
             <div class="flex gap-6 mt-4 md:mt-0 uppercase tracking-tighter">
                 <a href="#" class="hover:text-primary transition-colors">Terms</a>
                 <a href="#" class="hover:text-primary transition-colors">Privacy</a>
@@ -372,193 +361,5 @@
 
     <div class="fixed top-0 right-0 -z-10 w-[400px] h-[400px] bg-blue-100/20 dark:bg-blue-900/10 blur-[100px] rounded-full translate-x-1/2 -translate-y-1/2"></div>
     <div class="fixed bottom-0 left-0 -z-10 w-[300px] h-[300px] bg-emerald-100/10 dark:bg-emerald-900/5 blur-[80px] rounded-full -translate-x-1/2 translate-y-1/2"></div>
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>継続検査申請書作成ツールforHIRANO</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
-    <style>
-        * {
-            box-sizing: border-box;
-        }
-        body {
-            font-family: "Noto Sans JP", "Helvetica Neue", sans-serif;
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
-            background: linear-gradient(160deg, #f8fafc 0%, #e2e8f0 50%, #f1f5f9 100%);
-            color: #1e293b;
-        }
-        .page {
-            max-width: 720px;
-            margin: 0 auto;
-            padding: 48px 24px 64px;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-        .header h1 {
-            font-size: 1.75rem;
-            font-weight: 700;
-            color: #0f172a;
-            margin: 0 0 8px 0;
-            letter-spacing: -0.02em;
-        }
-        .header p {
-            font-size: 0.9375rem;
-            color: #64748b;
-            margin: 0;
-        }
-        .section {
-            background: #fff;
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 24px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-            border: 1px solid rgba(0,0,0,0.06);
-        }
-        .section-title {
-            font-size: 0.8125rem;
-            font-weight: 700;
-            color: #64748b;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin: 0 0 16px 0;
-            padding-bottom: 8px;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        .section:first-of-type .section-title {
-            margin-top: 0;
-        }
-        .link-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        .link-card {
-            display: block;
-            text-decoration: none;
-            padding: 16px 20px;
-            border-radius: 12px;
-            border: 1px solid #e2e8f0;
-            background: #fafafa;
-            color: #1e293b;
-            transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
-        }
-        .link-card:hover {
-            background: #f1f5f9;
-            border-color: #cbd5e1;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-        }
-        .link-card .title {
-            font-size: 1rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .link-card .title .icon {
-            font-size: 1.25rem;
-        }
-        .link-card .desc {
-            font-size: 0.8125rem;
-            color: #64748b;
-            margin: 6px 0 0 34px;
-            line-height: 1.4;
-        }
-        /* 普通自動車：緑系 */
-        .section.section-futsu .link-card:hover { border-color: #86efac; background: #f0fdf4; }
-        .section.section-futsu .section-title { color: #15803d; }
-        /* 軽自動車：青系 */
-        .section.section-kei .link-card:hover { border-color: #93c5fd; background: #eff6ff; }
-        .section.section-kei .section-title { color: #1d4ed8; }
-        /* 車庫証明：オレンジ系 */
-        .section.section-shako .link-card:hover { border-color: #fdba74; background: #fff7ed; }
-        .section.section-shako .section-title { color: #c2410c; }
-    </style>
-</head>
-<body>
-
-<div class="page">
-    <header class="header">
-        <h1>継続検査申請書 作成ポータル</h1>
-        <p>作成したい様式を選択してください</p>
-    </header>
-
-    <!-- 普通自動車 -->
-    <section class="section section-futsu">
-        <h2 class="section-title">普通自動車</h2>
-        <div class="link-list">
-            <a href="1gou/index.html" class="link-card">
-                <span class="title"><span class="icon">📄</span>第1号様式</span>
-                <div class="desc">自動車登録申請書（新規・移転・変更等）</div>
-            </a>
-            <a href="3gou/index.html" class="link-card">
-                <span class="title"><span class="icon">📋</span>第3号様式</span>
-                <div class="desc">登録自動車の継続検査申請書</div>
-            </a>
-            <a href="3gou2/index.html" class="link-card">
-                <span class="title"><span class="icon">📋</span>第3号様式の2</span>
-                <div class="desc">永久抹消登録・一時抹消登録・輸出抹消仮登録など</div>
-            </a>
-            <a href="3gou3/index.html" class="link-card">
-                <span class="title"><span class="icon">📋</span>第3号様式の3</span>
-                <div class="desc">永久抹消・重量税還付申請</div>
-            </a>
-            <a href="senyo3/index.html" class="link-card">
-                <span class="title"><span class="icon">🚗</span>専用 第3号様式</span>
-                <div class="desc">登録自動車の継続検査用</div>
-            </a>
-        </div>
-    </section>
-
-    <!-- 軽自動車 -->
-    <section class="section section-kei">
-        <h2 class="section-title">軽自動車</h2>
-        <div class="link-list">
-            <a href="keidai1gou/index.html" class="link-card">
-                <span class="title"><span class="icon">📄</span>軽第1号様式</span>
-                <div class="desc">軽自動車の継続検査申請書</div>
-            </a>
-            <a href="keidai4gou/index.html" class="link-card">
-                <span class="title"><span class="icon">📄</span>軽第4号様式</span>
-                <div class="desc">軽自動車検査証返納届出書（一時使用中止・解体返納など）</div>
-            </a>
-            <a href="keidai4gou3/index.html" class="link-card">
-                <span class="title"><span class="icon">📄</span>軽第4号様式の3</span>
-                <div class="desc">解体届出書・重量税還付申請書</div>
-            </a>
-            <a href="keisenn1/index.html" class="link-card">
-                <span class="title"><span class="icon">🚙</span>軽専用 第1号様式</span>
-                <div class="desc">自動車検査証記入申請書</div>
-            </a>
-            <a href="keisenn2/index.html" class="link-card">
-                <span class="title"><span class="icon">🚙</span>軽専用 第2号様式</span>
-                <div class="desc">軽自動車の継続検査用</div>
-            </a>
-        </div>
-    </section>
-
-    <!-- 車庫証明 -->
-    <section class="section section-shako">
-        <h2 class="section-title">車庫証明</h2>
-        <div class="link-list">
-            <a href="shako_houkoku/index.html" class="link-card">
-                <span class="title"><span class="icon">📝</span>自動車保管場所現地調査結果報告書</span>
-            </a>
-            <a href="shako_zu/index.html" class="link-card">
-                <span class="title"><span class="icon">📐</span>車庫証明図</span>
-            </a>
-        </div>
-    </section>
-</div>
-
 </body>
 </html>
