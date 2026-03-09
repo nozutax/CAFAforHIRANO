@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自動車登録申請書作成（第3号様式の2）</title>
+    <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+    <script src="https://unpkg.com/@pdf-lib/fontkit/dist/fontkit.umd.min.js"></script>
+    <style>
+        /* 既存スタイル */
+        body { font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background-color: #f5f5f5; color: #333; }
+        .container { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        h1 { text-align: center; color: #333; font-size: 22px; margin-bottom: 10px; font-weight: bold; }
+        p.subtitle { text-align: center; font-size: 14px; color: #666; margin-bottom: 30px; }
+        h2 { font-size: 16px; border-left: 5px solid #007BFF; padding-left: 10px; margin-top: 30px; margin-bottom: 15px; background: #eef5ff; padding-top: 5px; padding-bottom: 5px; }
+        
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: bold; margin-bottom: 6px; font-size: 14px; color: #444; }
+        input[type="text"], select, input[type="date"] { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; font-size: 16px; }
+        input[type="text"]:focus, select:focus { border-color: #007BFF; outline: none; }
+        
+        .row { display: flex; gap: 15px; align-items: flex-end; }
+        .col { flex: 1; }
+        .ocr-row .col { flex: 1; min-width: 0; }
+        .sub-section { font-size: 14px; font-weight: bold; color: #1e3a5f; margin-top: 18px; margin-bottom: 8px; border-left: 4px solid #007BFF; padding-left: 10px; }
+        .sub-section:first-of-type { margin-top: 0; }
+        
+        /* OCRボックス風スタイル */
+        .ocr-box-group { display: flex; gap: 5px; }
+        .ocr-input { text-align: center; font-family: monospace; letter-spacing: 2px; }
+        
+        /* チェックボックス */
+        .checkbox-group { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+        .checkbox-item { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; }
+        .checkbox-item input { transform: scale(1.2); cursor: pointer; }
+
+        /* ボタンスタイル */
+        button { display: block; width: 100%; padding: 16px; background-color: #007BFF; color: white; border: none; border-radius: 6px; font-size: 18px; cursor: pointer; margin-top: 40px; font-weight: bold; transition: background 0.3s; }
+        button:hover { background-color: #0056b3; }
+
+        .hint { font-size: 12px; color: #888; margin-top: 4px; }
+        
+        .inline-copy { margin-left: auto; font-size: 12px; font-weight: normal; color: #007BFF; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+        .inline-copy input { transform: scale(1); }
+
+        /* 共通レイアウト: 第3号様式ベース（上書き用） */
+        body {
+            font-family: "Helvetica Neue", Arial, sans-serif;
+            max-width: 950px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        p.subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+        h2 {
+            font-size: 16px;
+            background: #eef5ff;
+            border-left: 5px solid #007BFF;
+            padding: 8px 10px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 5px;
+        }
+        .hint {
+            font-size: 11px;
+            color: #888;
+            margin-top: 2px;
+            margin-bottom: 0;
+            line-height: 1.2;
+        }
+        input[type="text"], select, input[type="date"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 15px;
+            background-color: #fff;
+        }
+        .row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .col {
+            flex: 1;
+            min-width: 0;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 18px;
+            cursor: pointer;
+            margin-top: 40px;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>第3号様式の2 申請書作成</h1>
+    <p class="subtitle">永久抹消登録・一時抹消登録・輸出抹消仮登録など</p>
+    
+    <form id="pdfForm">
+        
+        <h2>上部 OCR コード入力欄</h2>
+        <div class="row ocr-row">
+            <div class="col">
+                <label>①業務種別 </label>
+                <input type="text" id="code_gyomu" maxlength="1"  class="ocr-input">
+            </div>
+            <div class="col">
+                <label>②手数料</label>
+                <input type="text" id="code_tesuryo" maxlength="1" class="ocr-input">
+            </div>
+            <div class="col">
+                <label>⑨出張</label>
+                <input type="text" id="code_shucho" maxlength="1" class="ocr-input">
+            </div>
+            <div class="col">
+                <label>⑫抹消</label>
+                <input type="text" id="code_massho" maxlength="1" class="ocr-input">
+            </div>
+            <div class="col">
+                <label>⑪処理</label>
+                <div style="display:flex; gap:6px; align-items:center;">
+                    <input type="text" id="code_shori_1" maxlength="1" class="ocr-input" style="width:2.5em; text-align:center;">
+                    <input type="text" id="code_shori_2" maxlength="1" class="ocr-input" style="width:2.5em; text-align:center;">
+                </div>
+            </div>
+            <div class="col">
+                <label>⑰制限</label>
+                <input type="text" id="code_seigen" maxlength="1" class="ocr-input">
+            </div>
+        </div>
+
+        <h2>車両情報</h2>
+        <div class="form-group">
+            <label>㉑自動車登録番号 (ナンバープレート)</label>
+            <div class="row">
+                <div style="flex:2"><input type="text" id="car_area" placeholder="品川"></div>
+                <div style="flex:1"><input type="text" id="car_class" placeholder="300" class="ocr-input"></div>
+                <div style="flex:1"><input type="text" id="car_hiragana" placeholder="あ"></div>
+                <div style="flex:2"><input type="text" id="car_no" placeholder="1234" class="ocr-input"></div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>㉒車台番号 (下7桁)</label>
+            <input type="text" id="chassis_no" maxlength="7" placeholder="ABC1234" class="ocr-input">
+        </div>
+
+        <h2>申請人・届出人</h2>
+
+        <div class="sub-section">所有者</div>
+        <div class="form-group">
+            <label>氏名又は名称</label>
+            <input type="text" id="owner_name" placeholder="山田 太郎">
+        </div>
+        <div class="form-group">
+            <label>住所</label>
+            <input type="text" id="owner_address" placeholder="東京都千代田区...">
+        </div>
+
+        <div class="sub-section">使用者</div>
+        <div class="form-group">
+            <div style="display:flex; justify-content:space-between;">
+                <label>氏名又は名称</label>
+                <label class="inline-copy"><input type="checkbox" onclick="copyValue('owner_name', 'user_name')"> 所有者と同じ</label>
+            </div>
+            <input type="text" id="user_name" placeholder="山田 太郎">
+        </div>
+        <div class="form-group">
+            <div style="display:flex; justify-content:space-between;">
+                <label>住所</label>
+                <label class="inline-copy"><input type="checkbox" onclick="copyValue('owner_address', 'user_address')"> 所有者と同じ</label>
+            </div>
+            <input type="text" id="user_address" placeholder="東京都千代田区...">
+        </div>
+
+        <h2>登録又は届出の原因（右下枠）</h2>
+        <div class="row">
+            <div class="col">
+                <label>原因を選択（チェック）</label>
+                <div class="checkbox-group">
+                    <label class="checkbox-item"><input type="checkbox" id="check_messhitsu"> 滅失</label>
+                    <label class="checkbox-item"><input type="checkbox" id="check_kaitai"> 解体（使用済自動車の解体を除く）</label>
+                    <label class="checkbox-item"><input type="checkbox" id="check_yoto_haishi"> 用途廃止</label>
+                    <label class="checkbox-item"><input type="checkbox" id="check_no_exist"> 車台が新規登録を受けた際に...</label>
+                    <label class="checkbox-item"><input type="checkbox" id="check_temp_stop"> 一時使用中止</label>
+                </div>
+            </div>
+            <div class="col">
+                <label>使用の本拠の位置</label>
+                <input type="text" id="base_location" placeholder="東京都千代田区..." style="margin-bottom:10px;">
+                
+                <label>原因の日付</label>
+                <div class="row" style="gap:5px;">
+                    <div style="padding-top:10px;">令和</div>
+                    <input type="text" id="reason_year" placeholder="年" style="width:50px;">
+                    <input type="text" id="reason_month" placeholder="月" style="width:50px;">
+                    <input type="text" id="reason_day" placeholder="日" style="width:50px;">
+                </div>
+            </div>
+        </div>
+
+        <button type="button" onclick="generatePDF()">PDFを作成してダウンロード</button>
+    </form>
+</div>
+
+<script>
+    const { PDFDocument, rgb } = PDFLib;
+
+    function copyValue(srcId, destId) {
+        document.getElementById(destId).value = document.getElementById(srcId).value;
+    }
+
+    async function generatePDF() {
+        let pdfBytes, fontBytes;
+        try {
+            // 第3号様式の2のPDFとフォントを読み込み
+            const pdfUrl = 'template.pdf'; 
+            const fontUrl = 'font.ttf'; 
+            [pdfBytes, fontBytes] = await Promise.all([
+                fetch(pdfUrl).then(res => res.arrayBuffer()),
+                fetch(fontUrl).then(res => res.arrayBuffer())
+            ]);
+        } catch (e) {
+            alert("template.pdf または font.ttf が同じフォルダに見つかりません。");
+            return;
+        }
+
+        const pdfDoc = await PDFDocument.load(pdfBytes);
+        pdfDoc.registerFontkit(fontkit);
+        const customFont = await pdfDoc.embedFont(fontBytes);
+        const page = pdfDoc.getPages()[0];
+        const { height } = page.getSize(); // A4縦などサイズ取得
+
+        // 値取得ヘルパー
+        const v = (id) => document.getElementById(id).value;
+
+        // 文字描画ヘルパー
+        const draw = (text, x, y, size = 10, spacing = 0) => {
+            if (!text) return;
+            text = String(text);
+            if (spacing > 0) {
+                // OCR用の等幅描画
+                for (let i = 0; i < text.length; i++) {
+                    page.drawText(text[i], { x: x + (i * spacing), y, size, font: customFont, color: rgb(0, 0, 0) });
+                }
+            } else {
+                // 通常テキスト
+                page.drawText(text, { x, y, size, font: customFont, color: rgb(0, 0, 0) });
+            }
+        };
+
+        // チェックマーク描画ヘルパー
+        const drawCheck = (id, x, y) => {
+            if (document.getElementById(id).checked) {
+                // チェックマークの代わりに■やレ点を描画
+                page.drawText('レ', { x, y, size: 10, font: customFont, color: rgb(0, 0, 0) });
+            }
+        };
+
+        // ==========================================
+        //  座標設定 (第3号様式の2 のレイアウト推定)
+        //  ※お手持ちのスキャン画像に合わせて微調整してください
+        //  PDF-Libは左下が(0,0)です。
+        // ==========================================
+
+        const OCR_W = 17.2; // OCRマスの幅
+        const Y_OCR_TOP = height - 60; // 最上段（業務種別など）
+        const Y_CAR_INFO = height - 147; // 自動車登録番号など
+        const Y_NAMES = height - 320; // 氏名欄の開始位置
+        const LINE_H = 28; // 行間
+
+        // --- 1. 最上段 OCRコード ---
+        // ①業務種別 (左端)
+        draw(v('code_gyomu'), 138, Y_OCR_TOP, 14, OCR_W);
+        // ②手数料
+        draw(v('code_tesuryo'), 192, Y_OCR_TOP, 14, OCR_W);
+        // ⑨出張
+        draw(v('code_shucho'), 248, Y_OCR_TOP, 14, OCR_W);
+        // ⑫抹消
+        draw(v('code_massho'), 295, Y_OCR_TOP, 14, OCR_W);
+        // ⑪処理（2桁）
+        draw(v('code_shori_1'), 345, Y_OCR_TOP, 14, OCR_W);
+        draw(v('code_shori_2'), 379, Y_OCR_TOP, 14, OCR_W);
+        // ⑰制限解除
+        draw(v('code_seigen'), 433, Y_OCR_TOP, 14, OCR_W);
+
+        // --- 2. 車両情報 ---
+        // ㉑自動車登録番号
+        draw(v('car_area'), 52, Y_CAR_INFO, 14,30); // 品川
+        draw(v('car_class'), 177, Y_CAR_INFO, 14, OCR_W); // 300
+        draw(v('car_hiragana'), 244, Y_CAR_INFO, 14); // あ
+        draw(v('car_no'), 275, Y_CAR_INFO, 14, OCR_W); // 1234
+        
+        // ㉒車台番号 (下7桁)
+        draw(v('chassis_no'), 370, Y_CAR_INFO, 14, OCR_W);
+
+        // --- 3. 申請人・使用者・所有者 ---
+        // 画像の「申請人・届出人」欄の位置に合わせて座標を設定します
+        // 左側の枠内
+        let y = 280; // 左下の開始位置（推定）
+        const X_LABEL = 40; // ラベル位置の右横
+        const X_TEXT = 130; // テキスト開始位置
+
+        // 申請人・届出人（所有者 → 使用者）
+        draw(v('owner_name'), X_TEXT, y);
+        y -= LINE_H;
+        draw(v('owner_address'), X_TEXT, y);
+        y -= (LINE_H * 1.8);
+
+        draw(v('user_name'), X_TEXT, y);
+        y -= LINE_H;
+        draw(v('user_address'), X_TEXT, y);
+
+        // --- 4. 右下：原因・使用の本拠 ---
+        // 原因チェックボックス（滅失を1番目に）
+        const X_REASON = 450;
+        let yReason = 182;
+        const R_GAP = 11.5;
+
+        drawCheck('check_messhitsu', X_REASON, yReason,7); // 滅失（1番目）
+        yReason -= R_GAP;
+        drawCheck('check_kaitai', X_REASON, yReason,7); // 解体
+        yReason -= R_GAP;
+        drawCheck('check_yoto_haishi', X_REASON, yReason,7); // 用途廃止
+        yReason -= R_GAP;
+        drawCheck('check_no_exist', X_REASON, yReason,7); // 車台が新規登録～
+        yReason -= R_GAP;
+        drawCheck('check_temp_stop', X_REASON, yReason,7); // 一時使用中止
+
+        // 使用の本拠の位置
+        draw(v('base_location'), X_REASON, 252, 10);
+
+        // 日付（令和〇年〇月〇日）
+        const X_DATE = 690;
+        const Y_DATE = 130; // 右下の方
+        draw(v('reason_year'), X_DATE, Y_DATE, 12);
+        draw(v('reason_month'), X_DATE + 29, Y_DATE, 12);
+        draw(v('reason_day'), X_DATE + 58, Y_DATE, 12);
+
+
+        // --- ダウンロード処理 ---
+        const now = new Date();
+        const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+        const applicant = (v('owner_name') || '未入力').replace(/[\\/:*?"<>|]/g, '');
+        const fileName = `${dateStr}_${applicant}_第3号2.pdf`;
+        const pdfDataUri = await pdfDoc.saveAsBase64({ dataUri: true });
+        const link = document.createElement('a');
+        link.href = pdfDataUri;
+        link.download = fileName;
+        link.click();
+    }
+</script>
+</body>
+</html>
