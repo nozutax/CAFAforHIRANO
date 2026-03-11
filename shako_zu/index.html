@@ -27,6 +27,21 @@
         #custom-cursor::before { top: 14px; left: 0; width: 30px; height: 2px; }
         #custom-cursor::after { left: 14px; top: 0; width: 2px; height: 30px; }
 
+        /* 地図移動（mappan）時は十字ではなく手（grab）風にする */
+        #custom-cursor.is-map-pan::before,
+        #custom-cursor.is-map-pan::after {
+            opacity: 0;
+        }
+        #custom-cursor.is-map-pan {
+            width: 22px;
+            height: 22px;
+            border: 2px solid white;
+            border-radius: 9999px;
+        }
+        #custom-cursor.is-map-pan.is-grabbing {
+            transform: translate(-50%, -50%) scale(0.92);
+        }
+
         button { padding: 10px 15px; cursor: pointer; border: 1px solid #ddd; background: #fff; border-radius: 6px; font-size: 14px; transition: 0.2s; }
         button:hover { background: #f9f9f9; }
         button.active { background: #007bff; color: white; border-color: #0056b3; }
@@ -444,6 +459,16 @@
             return { x, y };
         }
 
+        // 地図パン用：丸めなしのキャンバス座標
+        function getMapPosRaw(clientX, clientY) {
+            const rect = mapCanvas.getBoundingClientRect();
+            let x = rect.width > 0 ? (clientX - rect.left) / rect.width * mapCanvas.width : 0;
+            let y = rect.height > 0 ? (clientY - rect.top) / rect.height * mapCanvas.height : 0;
+            x = Math.max(0, Math.min(mapCanvas.width, x));
+            y = Math.max(0, Math.min(mapCanvas.height, y));
+            return { x, y };
+        }
+
         function loadMapImage() {
             const input = document.getElementById('map-address').value.trim();
             if (!input) {
@@ -522,12 +547,29 @@
             loadMapImage();
         }
 
-        // ピクセルオフセットから緯度経度の変化量を算出（ズームレベルと緯度に依存）
-        function pixelOffsetToLatLngDelta(dx, dy, zoom, centerLat) {
-            const scale = 256 * Math.pow(2, zoom);
-            const dlat = (dy * 180) / scale;  // 下方向ドラッグ = 中心が北へ
-            const dlng = (-dx * 360 * Math.cos(centerLat * Math.PI / 180)) / scale;  // 右方向ドラッグ = 中心が西へ
-            return { dlat, dlng };
+        // Static Maps API は scale=2 で取得するが、地理的な表示範囲は size に依存し scale では変わらない。
+        // そのため「中心座標の再計算」は scale を掛けないワールドピクセル（256*2^zoom）で行う。
+        const MAP_IMAGE_SCALE = 2;
+
+        // Web Mercator (EPSG:3857) で緯度経度<->ワールドピクセルを相互変換
+        function _worldSize(zoom) {
+            return 256 * Math.pow(2, zoom);
+        }
+
+        function latLngToWorldPx(lat, lng, zoom) {
+            const size = _worldSize(zoom);
+            const x = (lng + 180) / 360 * size;
+            const sinLat = Math.sin(lat * Math.PI / 180);
+            const y = (0.5 - Math.log((1 + sinLat) / (1 - sinLat)) / (4 * Math.PI)) * size;
+            return { x, y };
+        }
+
+        function worldPxToLatLng(x, y, zoom) {
+            const size = _worldSize(zoom);
+            const lng = x / size * 360 - 180;
+            const n = Math.PI - 2 * Math.PI * (y / size);
+            const lat = 180 / Math.PI * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n)));
+            return { lat, lng };
         }
 
         // 地図パン終了時：中心座標から新しい中心を算出して再取得（住所でも座標でも共通）
@@ -542,9 +584,23 @@
             }
             const lat = lastMapCenterLatLng.lat;
             const lng = lastMapCenterLatLng.lng;
-            const { dlat, dlng } = pixelOffsetToLatLngDelta(mapOffsetX, mapOffsetY, lastMapZoom, lat);
-            const newLat = Math.max(-85, Math.min(85, lat + dlat));
-            const newLng = ((lng + dlng) + 180) % 360 - 180;
+
+            // mapOffsetX/Y はキャンバス（=sizeの論理ピクセル）座標。
+            // Static Maps の scale=2 は解像度のみを上げるため、中心再計算ではそのままワールドピクセル差分として扱う。
+            // Static Maps 側の内部丸め等でわずかにズレが出るため、確定時のみ微小補正を掛ける。
+            // 体感の行きすぎを抑えるための係数（必要なら調整）。
+            const PAN_TUNE_X = 0.91; // 10%行きすぎ → 約0.91
+            const PAN_TUNE_Y = 0.93; // 7.5%行きすぎ → 約0.93
+            const dxWorld = mapOffsetX * PAN_TUNE_X;
+            const dyWorld = mapOffsetY * PAN_TUNE_Y;
+
+            // 画像を右(+)へ動かす＝地図中心は左へ、画像を下(+)へ動かす＝地図中心は上へ
+            const curWorld = latLngToWorldPx(lat, lng, lastMapZoom);
+            const nextWorld = { x: curWorld.x - dxWorld, y: curWorld.y - dyWorld };
+            const next = worldPxToLatLng(nextWorld.x, nextWorld.y, lastMapZoom);
+
+            const newLat = Math.max(-85, Math.min(85, next.lat));
+            const newLng = ((next.lng) + 180) % 360 - 180;
             const newCenter = newLat + ',' + newLng;
             lastMapCenterLatLng = { lat: newLat, lng: newLng };
             document.getElementById('map-address').value = newCenter;
@@ -576,8 +632,9 @@
                 redrawMap();
             }
             if (mapPanning) {
-                mapOffsetX = mapPanStartOffsetX + (e.clientX - mapPanStartX);
-                mapOffsetY = mapPanStartOffsetY + (e.clientY - mapPanStartY);
+                const cur = getMapPosRaw(e.clientX, e.clientY);
+                mapOffsetX = mapPanStartOffsetX + (cur.x - mapPanStartX);
+                mapOffsetY = mapPanStartOffsetY + (cur.y - mapPanStartY);
                 redrawMap();
             }
         }
@@ -594,10 +651,12 @@
             if (isMap) {
                 if (currentTool === 'mappan') {
                     mapPanning = true;
-                    mapPanStartX = e.clientX;
-                    mapPanStartY = e.clientY;
+                    const start = getMapPosRaw(e.clientX, e.clientY);
+                    mapPanStartX = start.x;
+                    mapPanStartY = start.y;
                     mapPanStartOffsetX = mapOffsetX;
                     mapPanStartOffsetY = mapOffsetY;
+                    if (cursor) cursor.classList.add('is-grabbing');
                     return;
                 }
                 if (currentTool === 'delete') {
@@ -691,6 +750,7 @@
         function handleGlobalMouseUp(e) {
             if (mapPanning) {
                 mapPanning = false;
+                if (cursor) cursor.classList.remove('is-grabbing');
                 reloadMapAfterPan();
                 return;
             }
@@ -1185,6 +1245,12 @@
             document.querySelectorAll('.toolbar button').forEach(b => b.classList.toggle('active', b.id === 'tool-'+t));
             var mappanBtn = document.getElementById('tool-mappan');
             if (mappanBtn) mappanBtn.classList.toggle('active', t === 'mappan');
+
+            // 地図移動ツール時はカーソル形状を変更（十字→手）
+            if (cursor) {
+                cursor.classList.toggle('is-map-pan', t === 'mappan');
+                cursor.classList.remove('is-grabbing');
+            }
 
             // 文字ツール選択時は、文字入力モーダルが開いていればそのテキストエリアにフォーカスを当てる
             if (t === 'text') {
