@@ -70,7 +70,7 @@
                     <span class="material-symbols-outlined text-[20px]">history</span>
                     申請履歴
                 </a>
-                <a href="#" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-all group">
+                <a href="#" id="navSettings" data-view="settings" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-all group">
                     <span class="material-symbols-outlined text-[20px]">settings</span>
                     設定
                 </a>
@@ -95,11 +95,7 @@
             <div>
                 <h2 class="text-2xl font-bold text-slate-900 dark:text-white">自動車申請書 作成ポータル</h2>
             </div>
-            <div class="flex items-center gap-3">
-                <button class="p-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all" onclick="document.documentElement.classList.toggle('dark')">
-                    <span class="material-symbols-outlined text-[20px]">dark_mode</span>
-                </button>
-            </div>
+            <div class="flex items-center gap-3"></div>
         </header>
 
         <div id="dashboardView" class="space-y-10">
@@ -395,6 +391,34 @@
             </div>
         </section>
 
+        <!-- 設定ビュー -->
+        <section id="settingsView" class="hidden">
+            <div class="flex items-center justify-between mb-6 border-b border-slate-200 dark:border-slate-800 pb-3">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary font-bold">settings</span>
+                    <h3 class="text-lg font-bold text-slate-800 dark:text-slate-200">設定</h3>
+                </div>
+            </div>
+            <div class="bg-white dark:bg-card-dark rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-6">
+                <h4 class="text-sm font-bold text-slate-800 dark:text-slate-200 mb-1">表示テーマ</h4>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">画面の表示モードを選択してください。</p>
+                <div class="flex gap-3" id="themeSelector">
+                    <button data-theme="light" class="theme-btn flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all">
+                        <span class="material-symbols-outlined text-[28px]">light_mode</span>
+                        <span class="text-sm font-semibold">ライト</span>
+                    </button>
+                    <button data-theme="dark" class="theme-btn flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all">
+                        <span class="material-symbols-outlined text-[28px]">dark_mode</span>
+                        <span class="text-sm font-semibold">ダーク</span>
+                    </button>
+                    <button data-theme="system" class="theme-btn flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all">
+                        <span class="material-symbols-outlined text-[28px]">computer</span>
+                        <span class="text-sm font-semibold">システム</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
         <footer class="mt-16 py-8 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between text-slate-400 text-xs font-medium">
             <p>© 2026 自動車申請書ポータル. All Rights Reserved。</p>
             <div class="flex gap-6 mt-4 md:mt-0 uppercase tracking-tighter">
@@ -529,69 +553,100 @@
             };
 
             function setActiveNav(view) {
-                const dash = document.getElementById('navDashboard');
-                const hist = document.getElementById('navHistory');
-                if (dash) {
-                    dash.classList.toggle('sidebar-item-active', view === 'dashboard');
-                    if (view === 'dashboard') {
-                        dash.classList.add('text-primary', 'bg-blue-50', 'dark:bg-blue-900/20');
+                ['navDashboard', 'navHistory', 'navSettings'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (!el) return;
+                    const isActive = el.dataset.view === view;
+                    el.classList.toggle('sidebar-item-active', isActive);
+                    if (isActive) {
+                        el.classList.add('text-primary', 'bg-blue-50', 'dark:bg-blue-900/20');
+                        el.classList.remove('text-slate-600', 'dark:text-slate-400');
                     } else {
-                        dash.classList.remove('text-primary', 'bg-blue-50', 'dark:bg-blue-900/20');
-                        dash.classList.add('text-slate-600', 'dark:text-slate-400');
+                        el.classList.remove('text-primary', 'bg-blue-50', 'dark:bg-blue-900/20');
+                        el.classList.add('text-slate-600', 'dark:text-slate-400');
                     }
-                }
-                if (hist) {
-                    hist.classList.toggle('sidebar-item-active', view === 'history');
-                    if (view === 'history') {
-                        hist.classList.add('text-primary', 'bg-blue-50', 'dark:bg-blue-900/20');
-                    } else {
-                        hist.classList.remove('text-primary', 'bg-blue-50', 'dark:bg-blue-900/20');
-                        hist.classList.add('text-slate-600', 'dark:text-slate-400');
-                    }
-                }
+                });
             }
 
             function switchView(view) {
-                const dashView = document.getElementById('dashboardView');
-                const histView = document.getElementById('historyView');
-                if (dashView && histView) {
-                    if (view === 'history') {
-                        dashView.classList.add('hidden');
-                        histView.classList.remove('hidden');
-                        renderHistoryTable();
-                    } else {
-                        histView.classList.add('hidden');
-                        dashView.classList.remove('hidden');
-                    }
-                }
+                const views = {
+                    dashboard: document.getElementById('dashboardView'),
+                    history: document.getElementById('historyView'),
+                    settings: document.getElementById('settingsView'),
+                };
+                Object.keys(views).forEach(k => {
+                    if (views[k]) views[k].classList.toggle('hidden', k !== view);
+                });
+                if (view === 'history') renderHistoryTable();
+                if (view === 'settings') updateThemeUI();
                 setActiveNav(view);
             }
 
             document.addEventListener('DOMContentLoaded', () => {
-                const navDash = document.getElementById('navDashboard');
-                const navHist = document.getElementById('navHistory');
-                if (navDash) {
-                    navDash.addEventListener('click', (e) => {
+                ['navDashboard', 'navHistory', 'navSettings'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.addEventListener('click', (e) => {
                         e.preventDefault();
-                        switchView('dashboard');
+                        switchView(el.dataset.view);
                     });
-                }
-                if (navHist) {
-                    navHist.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        switchView('history');
-                    });
-                }
+                });
 
                 ['filterDate', 'filterApplicant', 'filterDocument'].forEach(id => {
                     const el = document.getElementById(id);
-                    if (el) {
-                        el.addEventListener('input', () => renderHistoryTable());
-                    }
+                    if (el) el.addEventListener('input', () => renderHistoryTable());
                 });
 
-                // 初期表示はダッシュボード
+                initTheme();
                 switchView('dashboard');
+            });
+
+            const THEME_KEY = 'cafa-theme';
+
+            function applyTheme(pref) {
+                const html = document.documentElement;
+                if (pref === 'dark') {
+                    html.classList.add('dark');
+                } else if (pref === 'light') {
+                    html.classList.remove('dark');
+                } else {
+                    const sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                    html.classList.toggle('dark', sysDark);
+                }
+            }
+
+            function initTheme() {
+                const saved = localStorage.getItem(THEME_KEY) || 'system';
+                applyTheme(saved);
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+                    if ((localStorage.getItem(THEME_KEY) || 'system') === 'system') applyTheme('system');
+                });
+            }
+
+            function updateThemeUI() {
+                const saved = localStorage.getItem(THEME_KEY) || 'system';
+                document.querySelectorAll('#themeSelector .theme-btn').forEach(btn => {
+                    const val = btn.dataset.theme;
+                    const active = val === saved;
+                    btn.classList.toggle('border-primary', active);
+                    btn.classList.toggle('bg-blue-50', active);
+                    btn.classList.toggle('dark:bg-blue-900/20', active);
+                    btn.classList.toggle('text-primary', active);
+                    btn.classList.toggle('border-slate-200', !active);
+                    btn.classList.toggle('dark:border-slate-700', !active);
+                    btn.classList.toggle('text-slate-600', !active);
+                    btn.classList.toggle('dark:text-slate-300', !active);
+                    btn.classList.toggle('hover:bg-slate-50', !active);
+                    btn.classList.toggle('dark:hover:bg-slate-800', !active);
+                });
+            }
+
+            document.addEventListener('click', (e) => {
+                const btn = e.target.closest('#themeSelector .theme-btn');
+                if (!btn) return;
+                const val = btn.dataset.theme;
+                localStorage.setItem(THEME_KEY, val);
+                applyTheme(val);
+                updateThemeUI();
             });
         })();
     </script>
