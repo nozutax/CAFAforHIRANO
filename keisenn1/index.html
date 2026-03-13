@@ -210,7 +210,7 @@
     <p class="subtitle">軽専用1号様式への転記用入力フォーム</p>
     <form id="pdfForm">
         
-        <h2>1. 上部コード・番号提示</h2>
+        <h2>１．上部コード・番号提示</h2>
         <!-- 番号提示 用途（同一Y位置） -->
         <div class="row">
             <div class="col">
@@ -239,36 +239,36 @@
             </div>
         </div>
 
-        <h2>2. 希望番号・車両情報</h2>
+        <h2>２．希望番号・車両情報</h2>
         <!-- 希望車両番号 -->
         <div class="form-group">
             <label>希望車両番号</label>
-            <div class="row">
-                <input type="text" id="hope_car_num_1" placeholder="123" style="flex:1">
-                <input type="text" id="hope_car_num_2" placeholder="あ" style="flex:0.5">
-                <input type="text" id="hope_car_num_3" placeholder="1234" style="flex:2">
+            <div class="row" style="justify-content: flex-start; gap: 5px;">
+                <input type="text" id="hope_car_num_1" placeholder="123" style="width: 5em; text-align: center;">
+                <input type="text" id="hope_car_num_2" placeholder="あ" style="width: 3em; text-align: center;">
+                <input type="text" id="hope_car_num_3" placeholder="1234" style="width: 6.5em; text-align: center;">
             </div>
         </div>
 
         <!-- 車両情報 -->
         <div class="form-group">
             <label>車両番号</label>
-            <div class="row">
-                <input type="text" id="car_num_1" placeholder="地域名" style="flex:2">
-                <input type="text" id="car_num_2" placeholder="123" style="flex:1">
-                <input type="text" id="car_num_3" placeholder="あ" style="flex:0.5">
-                <input type="text" id="car_num_4" placeholder="1234" style="flex:2">
-                <input type="text" id="car_num_5" placeholder="小板" style="flex:0.5">
+            <div class="row" style="justify-content: flex-start; gap: 5px;">
+                <input type="text" id="car_num_1" placeholder="地域名" style="width: 6.5em; text-align: center;">
+                <input type="text" id="car_num_2" placeholder="123" style="width: 5em; text-align: center;">
+                <input type="text" id="car_num_3" placeholder="あ" style="width: 3em; text-align: center;">
+                <input type="text" id="car_num_4" placeholder="1234" style="width: 6.5em; text-align: center;">
+                <input type="text" id="car_num_5" placeholder="小板" style="width: 3em; text-align: center;">
             </div>
         </div>
 
         <!-- 車台番号 7文字制限 -->
         <div class="form-group">
             <label>車台番号 (下7桁)</label>
-            <input type="text" id="chassis_num" maxlength="7" class="box-input" placeholder="7文字以下">
+            <input type="text" id="chassis_num" maxlength="7" class="box-input" placeholder="7文字以下" style="width: 9em;">
         </div>
 
-        <h2>3. 使用者・所有者・本拠の住所</h2>
+        <h2>３．使用者・所有者・本拠の住所</h2>
         <!-- 住所・氏名欄 -->
 
         <div class="form-group">
@@ -333,7 +333,7 @@
             <input type="text" id="body_color" maxlength="1" placeholder="1文字">
         </div>
         <hr>
-        <h2>4. 申請人情報（使用者・所有者・受検者）</h2>
+        <h2>４．申請人情報（使用者・所有者・受検者）</h2>
         <div class="form-group form-block">
             <div class="form-block-title">申請者（使用者）</div>
             <label class="form-block-label">氏名又は名称</label>
@@ -403,6 +403,35 @@
         const elements = form.querySelectorAll('input, select, textarea');
         const seen = new Set();
         const groupMap = new Map();
+        const groupSecMap = new Map();
+
+        const labelOverrides = {
+            number_purpose_1: '番号提示用途', number_purpose_2: '番号提示用途',
+            number_purpose_3: '番号提示用途', number_purpose_4: '番号提示用途',
+            hope_car_num_1: '希望車両番号', hope_car_num_2: '希望車両番号', hope_car_num_3: '希望車両番号',
+            car_num_1: '車両番号', car_num_2: '車両番号', car_num_3: '車両番号',
+            car_num_4: '車両番号', car_num_5: '車両番号',
+            chassis_num: '車台番号',
+            user_name: '使用者氏名', user_address_1: '使用者住所', user_address_2: '使用者住所', user_address_3: '使用者住所',
+            user_same_owner_name: '所有者氏名（同じ）', owner_name_mei: '所有者氏名',
+            user_same_owner_address: '所有者住所（同じ）',
+            owner_address_mei_1: '所有者住所', owner_address_mei_2: '所有者住所', owner_address_mei_3: '所有者住所',
+            user_same_use_base: '本拠の位置（同じ）',
+            use_base_1: '使用の本拠の位置', use_base_2: '使用の本拠の位置', use_base_3: '使用の本拠の位置',
+            owner_code: '所有者コード', body_color: '車体の塗色',
+            applicant_name: '申請者（使用者）氏名', applicant_address: '申請者住所',
+            owner_name: '所有者氏名', owner_address: '所有者住所',
+            ex_user_name: '旧使用者氏名', ex_user_address: '旧使用者住所',
+            ex_owner_name: '旧所有者氏名', ex_owner_address: '旧所有者住所',
+            change_details: '変更事項'
+        };
+
+        const sectionMap = new Map();
+        let curSec = '';
+        form.querySelectorAll('h2, .form-group, .row').forEach(node => {
+            if (node.tagName === 'H2') curSec = node.textContent.trim();
+            else sectionMap.set(node, curSec);
+        });
 
         elements.forEach(el => {
             if (el.type === 'button' || el.type === 'submit') return;
@@ -438,20 +467,26 @@
             if (!valueText) valueText = '（未入力）';
 
             const isCheck = el.type === 'checkbox' || el.type === 'radio';
-            snapshot.push({ label: labelText, value: valueText });
+            const overrideLabel = labelOverrides[el.id] || labelText;
+            snapshot.push({ label: overrideLabel, value: valueText });
 
-            const groupKey = group || ('_ungrouped_' + snapshot.length);
+            const groupKey = group || labelOverrides[el.id] || ('_ungrouped_' + snapshot.length);
             if (!groupMap.has(groupKey)) groupMap.set(groupKey, []);
-            groupMap.get(groupKey).push({ label: labelText, value: valueText, isCheck });
+            groupMap.get(groupKey).push({ label: overrideLabel, value: valueText, isCheck });
+
+            if (!groupSecMap.has(groupKey)) {
+                if (group && sectionMap.has(group)) {
+                    groupSecMap.set(groupKey, sectionMap.get(group));
+                } else {
+                    const row = el.closest('.row');
+                    if (row && sectionMap.has(row)) {
+                        groupSecMap.set(groupKey, sectionMap.get(row));
+                    }
+                }
+            }
         });
 
         if (renderToDom && list) {
-            const sectionMap = new Map();
-            let curSec = '';
-            form.querySelectorAll('h2, .form-group').forEach(node => {
-                if (node.tagName === 'H2') curSec = node.textContent.trim();
-                else sectionMap.set(node, curSec);
-            });
             let lastSec = '';
             const renderRow = (part) => {
                 const row = document.createElement('div');
@@ -469,8 +504,8 @@
                 }
                 list.appendChild(row);
             };
-            for (const [groupEl, items] of groupMap) {
-                const sec = (groupEl instanceof Element) ? (sectionMap.get(groupEl) || '') : '';
+            for (const [groupKey, items] of groupMap) {
+                const sec = groupSecMap.get(groupKey) || '';
                 if (sec && sec !== lastSec) {
                     const hdr = document.createElement('div');
                     hdr.className = 'confirm-section';

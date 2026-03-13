@@ -214,25 +214,25 @@
 
         <div class="form-group">
             <label>車両番号</label>
-            <div class="row">
-                <input type="text" id="car_num_1" placeholder="地域名" style="flex:3">
-                <input type="text" id="car_num_2" placeholder="123" style="flex:2">
-                <input type="text" id="car_num_3" placeholder="あ" style="flex:1">
-                <input type="text" id="car_num_4" maxlength="4" placeholder="1234" style="flex:4">
+            <div class="row" style="justify-content: flex-start; gap: 5px;">
+                <input type="text" id="car_num_1" placeholder="地域名" style="width: 6.5em; text-align: center;">
+                <input type="text" id="car_num_2" placeholder="123" style="width: 5em; text-align: center;">
+                <input type="text" id="car_num_3" placeholder="あ" style="width: 3em; text-align: center;">
+                <input type="text" id="car_num_4" maxlength="4" placeholder="1234" style="width: 6.5em; text-align: center;">
             </div>
         </div>
 
         <div class="form-group">
             <label>車台番号 下7桁 (22)</label>
-            <input type="text" id="chassis_num" maxlength="7" placeholder="最大７文字（例：ＡＢ３１２３４）">
+            <input type="text" id="chassis_num" maxlength="7" placeholder="最大７文字（例：ＡＢ３１２３４）" style="width: 9em; text-align: center;">
         </div>
 
         <div class="form-group">
             <label>整備工場コード (28)</label>
-            <div class="row" style="gap:10px;">
-                <input type="text" id="factory_code_1" maxlength="2" placeholder="2桁" style="flex:1">
+            <div class="row" style="justify-content: flex-start; gap: 8px; align-items: center;">
+                <input type="text" id="factory_code_1" maxlength="2" placeholder="2桁" style="width: 4em; text-align: center;">
                 <span class="hyphen">-</span>
-                <input type="text" id="factory_code_2" maxlength="5" placeholder="5桁" style="flex:3">
+                <input type="text" id="factory_code_2" maxlength="5" placeholder="5桁" style="width: 7em; text-align: center;">
             </div>
         </div>
 

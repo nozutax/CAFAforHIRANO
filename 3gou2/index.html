@@ -21,7 +21,8 @@
         
         .row { display: flex; gap: 15px; align-items: flex-end; }
         .col { flex: 1; }
-        .ocr-row .col { flex: 1; min-width: 0; }
+        .ocr-row { gap: 6px !important; }
+        .ocr-row .col { flex: none; min-width: 0; }
         .sub-section { font-size: 14px; font-weight: bold; color: #1e3a5f; margin-top: 18px; margin-bottom: 8px; border-left: 4px solid #007BFF; padding-left: 10px; }
         .sub-section:first-of-type { margin-top: 0; }
         
@@ -230,54 +231,54 @@
     
     <form id="pdfForm">
         
-        <h2>上部 OCR コード入力欄</h2>
+        <h2>１．OCRコード入力欄</h2>
         <div class="row ocr-row">
             <div class="col">
                 <label>①業務種別 </label>
-                <input type="text" id="code_gyomu" maxlength="1"  class="ocr-input">
+                <input type="text" id="code_gyomu" maxlength="1" class="ocr-input" style="width: 3em; text-align: center;">
             </div>
             <div class="col">
                 <label>②手数料</label>
-                <input type="text" id="code_tesuryo" maxlength="1" class="ocr-input">
+                <input type="text" id="code_tesuryo" maxlength="1" class="ocr-input" style="width: 3em; text-align: center;">
             </div>
             <div class="col">
                 <label>⑨出張</label>
-                <input type="text" id="code_shucho" maxlength="1" class="ocr-input">
+                <input type="text" id="code_shucho" maxlength="1" class="ocr-input" style="width: 3em; text-align: center;">
             </div>
             <div class="col">
                 <label>⑫抹消</label>
-                <input type="text" id="code_massho" maxlength="1" class="ocr-input">
+                <input type="text" id="code_massho" maxlength="1" class="ocr-input" style="width: 3em; text-align: center;">
             </div>
             <div class="col">
                 <label>⑪処理</label>
                 <div style="display:flex; gap:6px; align-items:center;">
-                    <input type="text" id="code_shori_1" maxlength="1" class="ocr-input" style="width:2.5em; text-align:center;">
-                    <input type="text" id="code_shori_2" maxlength="1" class="ocr-input" style="width:2.5em; text-align:center;">
+                    <input type="text" id="code_shori_1" maxlength="1" class="ocr-input" style="width: 3em; text-align: center;">
+                    <input type="text" id="code_shori_2" maxlength="1" class="ocr-input" style="width: 3em; text-align: center;">
                 </div>
             </div>
             <div class="col">
                 <label>⑰制限</label>
-                <input type="text" id="code_seigen" maxlength="1" class="ocr-input">
+                <input type="text" id="code_seigen" maxlength="1" class="ocr-input" style="width: 3em; text-align: center;">
             </div>
         </div>
 
-        <h2>車両情報</h2>
+        <h2>２．車両情報</h2>
         <div class="form-group">
             <label>㉑自動車登録番号 (ナンバープレート)</label>
-            <div class="row">
-                <div style="flex:2"><input type="text" id="car_area" placeholder="品川"></div>
-                <div style="flex:1"><input type="text" id="car_class" placeholder="300" class="ocr-input"></div>
-                <div style="flex:1"><input type="text" id="car_hiragana" placeholder="あ"></div>
-                <div style="flex:2"><input type="text" id="car_no" placeholder="1234" class="ocr-input"></div>
+            <div class="row" style="gap: 5px;">
+                <div><input type="text" id="car_area" placeholder="品川" style="width: 6.5em; text-align: center;"></div>
+                <div><input type="text" id="car_class" placeholder="300" class="ocr-input" style="width: 5em; text-align: center;"></div>
+                <div><input type="text" id="car_hiragana" placeholder="あ" style="width: 3em; text-align: center;"></div>
+                <div><input type="text" id="car_no" placeholder="1234" class="ocr-input" style="width: 6.5em; text-align: center;"></div>
             </div>
         </div>
 
         <div class="form-group">
             <label>㉒車台番号 (下7桁)</label>
-            <input type="text" id="chassis_no" maxlength="7" placeholder="ABC1234" class="ocr-input">
+            <input type="text" id="chassis_no" maxlength="7" placeholder="ABC1234" class="ocr-input" style="width: 9em; text-align: center;">
         </div>
 
-        <h2>申請人・届出人</h2>
+        <h2>３．申請人・届出人</h2>
 
         <div class="sub-section">所有者</div>
         <div class="form-group">
@@ -305,7 +306,7 @@
             <input type="text" id="user_address" placeholder="東京都千代田区...">
         </div>
 
-        <h2>登録又は届出の原因（右下枠）</h2>
+        <h2>４．登録又は届出の原因 他</h2>
         <div class="row">
             <div class="col">
                 <label>原因を選択（チェック）</label>
@@ -368,6 +369,28 @@
         const elements = form.querySelectorAll('input, select, textarea');
         const seen = new Set();
         const groupMap = new Map();
+        const groupSecMap = new Map();
+
+        const sectionMap = new Map();
+        let curSec = '';
+        form.querySelectorAll('h2, .form-group, .row').forEach(node => {
+            if (node.tagName === 'H2') curSec = node.textContent.trim();
+            else sectionMap.set(node, curSec);
+        });
+
+        const labelOverrides = {
+            'code_gyomu': '業務種別',
+            'code_tesuryo': '手数料',
+            'code_shucho': '出張',
+            'code_massho': '抹消',
+            'code_shori_1': '処理１',
+            'code_shori_2': '処理２',
+            'code_seigen': '制限',
+            'base_location': '使用の本拠の位置',
+            'reason_year': '原因の日付',
+            'reason_month': '原因の日付',
+            'reason_day': '原因の日付',
+        };
 
         elements.forEach(el => {
             if (el.type === 'button' || el.type === 'submit') return;
@@ -387,6 +410,8 @@
                 labelText = el.id || el.name || '項目';
             }
 
+            if (labelOverrides[el.id]) labelText = labelOverrides[el.id];
+
             const key = `${labelText}|${el.name}|${el.id}`;
             if (seen.has(key)) return;
             seen.add(key);
@@ -405,18 +430,22 @@
             const isCheck = el.type === 'checkbox' || el.type === 'radio';
             snapshot.push({ label: labelText, value: valueText });
 
-            const groupKey = group || ('_ungrouped_' + snapshot.length);
+            const groupKey = group || labelOverrides[el.id] || ('_ungrouped_' + snapshot.length);
             if (!groupMap.has(groupKey)) groupMap.set(groupKey, []);
             groupMap.get(groupKey).push({ label: labelText, value: valueText, isCheck });
+
+            if (!groupSecMap.has(groupKey)) {
+                let sec = '';
+                if (group) sec = sectionMap.get(group) || '';
+                if (!sec) {
+                    const row = el.closest('.row');
+                    if (row) sec = sectionMap.get(row) || '';
+                }
+                groupSecMap.set(groupKey, sec);
+            }
         });
 
         if (renderToDom && list) {
-            const sectionMap = new Map();
-            let curSec = '';
-            form.querySelectorAll('h2, .form-group').forEach(node => {
-                if (node.tagName === 'H2') curSec = node.textContent.trim();
-                else sectionMap.set(node, curSec);
-            });
             let lastSec = '';
             const renderRow = (part) => {
                 const row = document.createElement('div');
@@ -434,8 +463,8 @@
                 }
                 list.appendChild(row);
             };
-            for (const [groupEl, items] of groupMap) {
-                const sec = (groupEl instanceof Element) ? (sectionMap.get(groupEl) || '') : '';
+            for (const [groupKey, items] of groupMap) {
+                const sec = groupSecMap.get(groupKey) || '';
                 if (sec && sec !== lastSec) {
                     const hdr = document.createElement('div');
                     hdr.className = 'confirm-section';

@@ -208,7 +208,7 @@
     <h1>自動車保管場所現地調査結果報告書</h1>
     <form id="pdfForm">
         
-        <h2>申請者情報</h2>
+        <h2>１．申請者情報</h2>
         <div class="form-group">
             <label>申請者の住所</label>
             <input type="text" id="applicant_address" placeholder="東京都千代田区...">
@@ -224,7 +224,7 @@
         </div>
 
         <!-- 申請車種 -->
-        <h2>申請車種</h2>
+        <h2>２．申請車種</h2>
         <div class="form-group">
             <div class="radio-group">
                 <label class="radio-label"><input type="radio" name="car_type" value="small_pass"> 小型乗用</label>
@@ -240,7 +240,7 @@
         </div>
 
         <!-- 申請事由 -->
-        <h2>申請事由</h2>
+        <h2>３．申請事由</h2>
         <div class="form-group">
             <div class="radio-group">
                 <!-- ラベル修正: 新車(新規)→新規, 代車(代替)→代替 -->
@@ -281,7 +281,7 @@
         </div>
 
         <!-- 保管場所の種類（複数選択可） -->
-        <h2>保管場所の種類</h2>
+        <h2>４．保管場所の種類</h2>
         <div class="form-group">
             <div class="checkbox-group">
                 <label class="checkbox-label"><input type="checkbox" name="storage_type" value="lot"> 空地</label>
@@ -300,7 +300,7 @@
         </div>
 
         <!-- 保管場所の広さ -->
-        <h2>保管場所の広さ</h2>
+        <h2>５．保管場所の広さ</h2>
         <div class="row">
             <div class="col">
                 <label>縦 (m)</label>
@@ -349,6 +349,26 @@
         const elements = form.querySelectorAll('input, select, textarea');
         const seen = new Set();
         const groupMap = new Map();
+        const groupSecMap = new Map();
+
+        const labelOverrides = {
+            applicant_address: '申請者住所', applicant_name: '申請者氏名',
+            storage_location: '保管場所の位置',
+            car_type_other_text: '申請車種（その他）',
+            app_reason_add_text: '増車台数',
+            sub_car_name: '代替車両の車名',
+            sub_reg_year: '代替車両の登録年月', sub_reg_month: '代替車両の登録年月',
+            chassis_num: '車台番号',
+            capacity: '総収容台数',
+            dim_length: '縦', dim_width: '横', dim_area: '面積'
+        };
+
+        const sectionMap = new Map();
+        let curSec = '';
+        form.querySelectorAll('h2, .form-group, .row').forEach(node => {
+            if (node.tagName === 'H2') curSec = node.textContent.trim();
+            else sectionMap.set(node, curSec);
+        });
 
         elements.forEach(el => {
             if (el.type === 'button' || el.type === 'submit') return;
@@ -384,20 +404,26 @@
             if (!valueText) valueText = '（未入力）';
 
             const isCheck = el.type === 'checkbox' || el.type === 'radio';
-            snapshot.push({ label: labelText, value: valueText });
+            const overrideLabel = labelOverrides[el.id] || labelText;
+            snapshot.push({ label: overrideLabel, value: valueText });
 
-            const groupKey = group || ('_ungrouped_' + snapshot.length);
+            const groupKey = group || labelOverrides[el.id] || ('_ungrouped_' + snapshot.length);
             if (!groupMap.has(groupKey)) groupMap.set(groupKey, []);
-            groupMap.get(groupKey).push({ label: labelText, value: valueText, isCheck });
+            groupMap.get(groupKey).push({ label: overrideLabel, value: valueText, isCheck });
+
+            if (!groupSecMap.has(groupKey)) {
+                if (group && sectionMap.has(group)) {
+                    groupSecMap.set(groupKey, sectionMap.get(group));
+                } else {
+                    const row = el.closest('.row');
+                    if (row && sectionMap.has(row)) {
+                        groupSecMap.set(groupKey, sectionMap.get(row));
+                    }
+                }
+            }
         });
 
         if (renderToDom && list) {
-            const sectionMap = new Map();
-            let curSec = '';
-            form.querySelectorAll('h2, .form-group').forEach(node => {
-                if (node.tagName === 'H2') curSec = node.textContent.trim();
-                else sectionMap.set(node, curSec);
-            });
             let lastSec = '';
             const renderRow = (part) => {
                 const row = document.createElement('div');
@@ -415,8 +441,8 @@
                 }
                 list.appendChild(row);
             };
-            for (const [groupEl, items] of groupMap) {
-                const sec = (groupEl instanceof Element) ? (sectionMap.get(groupEl) || '') : '';
+            for (const [groupKey, items] of groupMap) {
+                const sec = groupSecMap.get(groupKey) || '';
                 if (sec && sec !== lastSec) {
                     const hdr = document.createElement('div');
                     hdr.className = 'confirm-section';

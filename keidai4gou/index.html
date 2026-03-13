@@ -207,24 +207,22 @@
     
     <form id="pdfForm">
         
-        <h2>OCR入力欄（上部）</h2>
-        <div class="row">
-            <div class="col" style="flex:4;">
-                <label>1 車両番号 (ナンバープレート)</label>
-                <div class="row" style="gap:5px; margin-bottom:0;">
-                    <input type="text" id="car_num_1" placeholder="品川" style="flex:2">
-                    <input type="text" id="car_num_2" placeholder="580" style="flex:2">
-                    <input type="text" id="car_num_3" placeholder="あ" style="flex:1">
-                    <input type="text" id="car_num_4" maxlength="4" placeholder="1234" style="flex:3">
-                </div>
-            </div>
-            <div class="col" style="flex:3;">
-                <label>3 車台番号 (下7桁)</label>
-                <input type="text" id="chassis_num" maxlength="7" placeholder="ABC1234">
+        <h2>１．車両情報</h2>
+        <div class="form-group">
+            <label>1 車両番号 (ナンバープレート)</label>
+            <div class="row" style="justify-content: flex-start; gap: 5px; margin-bottom: 0;">
+                <input type="text" id="car_num_1" placeholder="品川" style="width: 6.5em; text-align: center;">
+                <input type="text" id="car_num_2" placeholder="580" style="width: 5em; text-align: center;">
+                <input type="text" id="car_num_3" placeholder="あ" style="width: 3em; text-align: center;">
+                <input type="text" id="car_num_4" maxlength="4" placeholder="1234" style="width: 6.5em; text-align: center;">
             </div>
         </div>
+        <div class="form-group">
+            <label>3 車台番号 (下7桁)</label>
+            <input type="text" id="chassis_num" maxlength="7" placeholder="ABC1234" style="width: 9em; text-align: center;">
+        </div>
 
-        <h2>申請者・所有者情報</h2>
+        <h2>２．申請者・所有者情報</h2>
         <div class="form-group">
             <label>申請者（使用者） 氏名又は名称</label>
             <input type="text" id="user_name" placeholder="軽自動車 太郎">
@@ -248,7 +246,7 @@
             <input type="text" id="owner_address" placeholder="東京都港区...">
         </div>
 
-        <h2>返納の原因（下部）</h2>
+        <h2>３．返納の原因</h2>
         <div class="form-group">
             <label>該当する項目を選択してください</label>
             <div class="radio-group">
@@ -301,6 +299,20 @@
         const elements = form.querySelectorAll('input, select, textarea');
         const seen = new Set();
         const groupMap = new Map();
+        const groupSecMap = new Map();
+
+        const sectionMap = new Map();
+        let curSec = '';
+        form.querySelectorAll('h2, .form-group, .row').forEach(node => {
+            if (node.tagName === 'H2') curSec = node.textContent.trim();
+            else sectionMap.set(node, curSec);
+        });
+
+        const labelOverrides = {
+            'car_num_1': '車両番号', 'car_num_2': '車両番号',
+            'car_num_3': '車両番号', 'car_num_4': '車両番号',
+            'chassis_num': '車台番号',
+        };
 
         elements.forEach(el => {
             if (el.type === 'button' || el.type === 'submit') return;
@@ -320,6 +332,8 @@
                 labelText = el.id || el.name || '項目';
             }
 
+            if (labelOverrides[el.id]) labelText = labelOverrides[el.id];
+
             const key = `${labelText}|${el.name}|${el.id}`;
             if (seen.has(key)) return;
             seen.add(key);
@@ -338,18 +352,22 @@
             const isCheck = el.type === 'checkbox' || el.type === 'radio';
             snapshot.push({ label: labelText, value: valueText });
 
-            const groupKey = group || ('_ungrouped_' + snapshot.length);
+            const groupKey = group || labelOverrides[el.id] || ('_ungrouped_' + snapshot.length);
             if (!groupMap.has(groupKey)) groupMap.set(groupKey, []);
             groupMap.get(groupKey).push({ label: labelText, value: valueText, isCheck });
+
+            if (!groupSecMap.has(groupKey)) {
+                let sec = '';
+                if (group) sec = sectionMap.get(group) || '';
+                if (!sec) {
+                    const row = el.closest('.row');
+                    if (row) sec = sectionMap.get(row) || '';
+                }
+                groupSecMap.set(groupKey, sec);
+            }
         });
 
         if (renderToDom && list) {
-            const sectionMap = new Map();
-            let curSec = '';
-            form.querySelectorAll('h2, .form-group').forEach(node => {
-                if (node.tagName === 'H2') curSec = node.textContent.trim();
-                else sectionMap.set(node, curSec);
-            });
             let lastSec = '';
             const renderRow = (part) => {
                 const row = document.createElement('div');
@@ -367,8 +385,8 @@
                 }
                 list.appendChild(row);
             };
-            for (const [groupEl, items] of groupMap) {
-                const sec = (groupEl instanceof Element) ? (sectionMap.get(groupEl) || '') : '';
+            for (const [groupKey, items] of groupMap) {
+                const sec = groupSecMap.get(groupKey) || '';
                 if (sec && sec !== lastSec) {
                     const hdr = document.createElement('div');
                     hdr.className = 'confirm-section';

@@ -223,7 +223,7 @@
 
     <form id="pdfForm">
         
-        <!-- 1. 最上段 -->
+        <h2>１．OCRコード</h2>
         <div class="section">
             <div class="row">
                 <div class="col-narrow">
@@ -247,21 +247,25 @@
                     <input type="text" id="code_kanpu" maxlength="1" placeholder="0なし" class="ocr">
                 </div>
             </div>
+        </div>
+
+        <h2>２．自動車情報</h2>
+        <div class="section">
             <div class="row">
                 <div class="col">
                     <label>㉑自動車登録番号</label>
                     <div class="multi-input">
-                        <input type="text" id="car_area" placeholder="品川" style="flex:1">
-                        <input type="text" id="car_class" placeholder="300" class="ocr" style="flex:1">
-                        <input type="text" id="car_hira" placeholder="あ" style="flex:0.5">
-                        <input type="text" id="car_no" placeholder="1234" class="ocr" style="flex:1">
+                        <input type="text" id="car_area" placeholder="品川" style="width: 6.5em; text-align: center;">
+                        <input type="text" id="car_class" placeholder="300" class="ocr" style="width: 5em; text-align: center;">
+                        <input type="text" id="car_hira" placeholder="あ" style="width: 3em; text-align: center;">
+                        <input type="text" id="car_no" placeholder="1234" class="ocr" style="width: 6.5em; text-align: center;">
                     </div>
                 </div>
             </div>
             <div class="row">
                 <div class="col">
                     <label>㉒車台番号 (下7桁)</label>
-                    <input type="text" id="chassis_no" maxlength="7" class="ocr">
+                    <input type="text" id="chassis_no" maxlength="7" class="ocr" style="width: 9em; text-align: center;">
                 </div>
             </div>
             <div class="row">
@@ -272,7 +276,7 @@
             </div>
         </div>
 
-        <h2>申請者（所有者）情報</h2>
+        <h2>３．申請者（所有者）情報</h2>
         <div class="section">
             <div class="row">
                 <div class="col-mid">
@@ -296,54 +300,60 @@
                     <input type="text" id="app_kanji" placeholder="申請 太郎" class="ocr" style="text-align:left;">
                 </div>
             </div>
-            <div class="row">
-                <div class="col">
+            <div class="row" style="justify-content: flex-start;">
+                <div style="flex: none;">
                     <label>⑫住所コード (都道府県-市区郡町村-小字)</label>
-                    <input type="text" id="addr_code" maxlength="12" class="ocr" placeholder="131010056など12桁">
+                    <input type="text" id="addr_code" maxlength="12" class="ocr" placeholder="131010056など12桁" style="width: 14em; text-align: center;">
                 </div>
-                <div class="col-mid">
+                <div style="flex: none;">
                     <label>丁目</label>
-                    <input type="text" id="addr_chome" class="ocr">
+                    <input type="text" id="addr_chome" class="ocr" style="width: 5em; text-align: center;">
                 </div>
-                <div class="col">
+                <div style="flex: none;">
                     <label>番・号・番地・棟番号等</label>
-                    <input type="text" id="addr_banchi" class="ocr" style="text-align:left;">
+                    <input type="text" id="addr_banchi" class="ocr" style="width: 16em; text-align: left;">
                 </div>
             </div>
             <div class="row">
-                <div class="col-mid">
+                <div class="col">
                     <label>⑬郵便番号</label>
                     <div class="multi-input">
-                        <input type="text" id="app_zip_1" maxlength="3" class="ocr" placeholder="100">
+                        <input type="text" id="app_zip_1" maxlength="3" class="ocr" placeholder="100" style="width: 5em; text-align: center;">
                         <span>-</span>
-                        <input type="text" id="app_zip_2" maxlength="4" class="ocr" placeholder="0001">
+                        <input type="text" id="app_zip_2" maxlength="4" class="ocr" placeholder="0001" style="width: 6em; text-align: center;">
                     </div>
                 </div>
+            </div>
+            <div class="row">
                 <div class="col">
                     <label>⑭電話番号</label>
                     <div class="multi-input">
-                        <input type="text" id="app_tel_1" maxlength="6" class="ocr" placeholder="03">
+                        <input type="text" id="app_tel_1" maxlength="6" class="ocr" placeholder="03" style="width: 7em; text-align: center;">
                         <span>-</span>
-                        <input type="text" id="app_tel_2" maxlength="4" class="ocr" placeholder="1234">
+                        <input type="text" id="app_tel_2" maxlength="4" class="ocr" placeholder="1234" style="width: 6em; text-align: center;">
                         <span>-</span>
-                        <input type="text" id="app_tel_3" maxlength="4" class="ocr" placeholder="5678">
+                        <input type="text" id="app_tel_3" maxlength="4" class="ocr" placeholder="5678" style="width: 6em; text-align: center;">
                     </div>
                 </div>
-                <div class="col-mid">
+            </div>
+            <div class="row">
+                <div class="col">
                     <label>⑯共同所有</label>
-                    <select id="joint_owner_flag">
+                    <select id="joint_owner_flag" style="width: 8em;">
                         <option value="">選択</option>
                         <option value="1">1:有</option>
                     </select>
                 </div>
+            </div>
+            <div class="row">
                 <div class="col">
                     <label>⑱申請者所有者コード</label>
-                    <input type="text" id="owner_code" class="ocr">
+                    <input type="text" id="owner_code" class="ocr" style="width: 12em; text-align: center;">
                 </div>
             </div>
         </div>
 
-        <h2>振込先口座（重量税還付申請用）</h2>
+        <h2>４．振込先口座（重量税還付申請用）</h2>
         <div class="section">
             <div class="row">
                 <div class="col">
@@ -419,7 +429,7 @@
             </div>
         </div>
 
-        <h2>申請人・届出人</h2>
+        <h2>５．申請人・届出人（所有者）情報</h2>
         <div class="section">
             <div class="row">
                 <div class="col">
@@ -468,6 +478,36 @@
         const elements = form.querySelectorAll('input, select, textarea');
         const seen = new Set();
         const groupMap = new Map();
+        const groupSecMap = new Map();
+
+        const sectionMap = new Map();
+        let curSec = '';
+        form.querySelectorAll('h2, .form-group, .section, .row').forEach(node => {
+            if (node.tagName === 'H2') curSec = node.textContent.trim();
+            else sectionMap.set(node, curSec);
+        });
+
+        const labelOverrides = {
+            'code_gyomu': '業務', 'code_shucho': '出張', 'code_shori': '処理',
+            'code_seigen': '制限', 'code_kanpu': '重還付',
+            'car_area': '自動車登録番号', 'car_class': '自動車登録番号',
+            'car_hira': '自動車登録番号', 'car_no': '自動車登録番号',
+            'chassis_no': '車台番号',
+            'mobile_report_no': '移動報告番号',
+            'applicant_type': '人格区分',
+            'app_kana': '氏名カナ', 'app_kanji': '氏名漢字',
+            'addr_code': '住所コード', 'addr_chome': '住所コード', 'addr_banchi': '住所コード',
+            'app_zip_1': '郵便番号', 'app_zip_2': '郵便番号',
+            'app_tel_1': '電話番号', 'app_tel_2': '電話番号', 'app_tel_3': '電話番号',
+            'joint_owner_flag': '共同所有',
+            'owner_code': '申請者所有者コード',
+            'bank_name': '金融機関名', 'bank_type': '金融機関区分',
+            'branch_name': '支店名', 'branch_type': '支店種別',
+            'account_no': '口座番号', 'account_type': '口座種類',
+            'my_number': '個人番号または法人番号',
+            'applicant_owner_name': '所有者氏名又は名称',
+            'applicant_owner_address': '所有者住所',
+        };
 
         elements.forEach(el => {
             if (el.type === 'button' || el.type === 'submit') return;
@@ -487,6 +527,8 @@
                 labelText = el.id || el.name || '項目';
             }
 
+            if (labelOverrides[el.id]) labelText = labelOverrides[el.id];
+
             const key = `${labelText}|${el.name}|${el.id}`;
             if (seen.has(key)) return;
             seen.add(key);
@@ -505,18 +547,26 @@
             const isCheck = el.type === 'checkbox' || el.type === 'radio';
             snapshot.push({ label: labelText, value: valueText });
 
-            const groupKey = group || ('_ungrouped_' + snapshot.length);
+            const groupKey = group || labelOverrides[el.id] || ('_ungrouped_' + snapshot.length);
             if (!groupMap.has(groupKey)) groupMap.set(groupKey, []);
             groupMap.get(groupKey).push({ label: labelText, value: valueText, isCheck });
+
+            if (!groupSecMap.has(groupKey)) {
+                let sec = '';
+                if (group) sec = sectionMap.get(group) || '';
+                if (!sec) {
+                    const row = el.closest('.row');
+                    if (row) sec = sectionMap.get(row) || '';
+                }
+                if (!sec) {
+                    const sect = el.closest('.section');
+                    if (sect) sec = sectionMap.get(sect) || '';
+                }
+                groupSecMap.set(groupKey, sec);
+            }
         });
 
         if (renderToDom && list) {
-            const sectionMap = new Map();
-            let curSec = '';
-            form.querySelectorAll('h2, .form-group').forEach(node => {
-                if (node.tagName === 'H2') curSec = node.textContent.trim();
-                else sectionMap.set(node, curSec);
-            });
             let lastSec = '';
             const renderRow = (part) => {
                 const row = document.createElement('div');
@@ -534,8 +584,8 @@
                 }
                 list.appendChild(row);
             };
-            for (const [groupEl, items] of groupMap) {
-                const sec = (groupEl instanceof Element) ? (sectionMap.get(groupEl) || '') : '';
+            for (const [groupKey, items] of groupMap) {
+                const sec = groupSecMap.get(groupKey) || '';
                 if (sec && sec !== lastSec) {
                     const hdr = document.createElement('div');
                     hdr.className = 'confirm-section';

@@ -220,7 +220,7 @@
 
     <form id="pdfForm">
         
-        <!-- 最上段 -->
+        <h2>１．OCRコード</h2>
         <div class="row">
             <div class="col-narrow">
                 <label>71返納</label>
@@ -236,24 +236,26 @@
             </div>
         </div>
 
-        <h2>車両情報</h2>
+        <h2>２．車両情報</h2>
         <div class="row">
             <div class="col">
                 <label>①車両番号 (ナンバープレート)</label>
-                <div class="multi-input">
-                    <input type="text" id="car_no_1" placeholder="練馬" style="flex:1">
-                    <input type="text" id="car_no_2" placeholder="580" class="ocr" style="flex:1">
-                    <input type="text" id="car_no_3" placeholder="あ" style="flex:0.5">
-                    <input type="text" id="car_no_4" placeholder="1234" class="ocr" style="flex:1">
+                <div class="multi-input" style="justify-content: flex-start; gap: 5px;">
+                    <input type="text" id="car_no_1" placeholder="練馬" style="width: 6.5em; text-align: center;">
+                    <input type="text" id="car_no_2" placeholder="580" class="ocr" style="width: 5em; text-align: center;">
+                    <input type="text" id="car_no_3" placeholder="あ" style="width: 3em; text-align: center;">
+                    <input type="text" id="car_no_4" placeholder="1234" class="ocr" style="width: 6.5em; text-align: center;">
                 </div>
             </div>
+        </div>
+        <div class="row">
             <div class="col">
                 <label>③車台番号 (下7桁等)</label>
-                <input type="text" id="chassis_no" class="ocr" placeholder="ABC-1234567">
+                <input type="text" id="chassis_no" class="ocr" placeholder="ABC-1234567" style="width: 14em;">
             </div>
         </div>
 
-        <h2>申請者（所有者）情報</h2>
+        <h2>３．申請者（所有者）情報</h2>
         <div class="row">
             <div class="col-narrow">
                 <label>人格区分</label>
@@ -327,7 +329,7 @@
             </div>
         </div>
 
-        <h2>振込先口座（重量税還付申請用）</h2>
+        <h2>４．振込先口座（重量税還付申請用）</h2>
         <div class="row">
             <div class="col">
                 <label>金融機関名</label>
@@ -401,7 +403,7 @@
             </div>
         </div>
 
-        <h2>下部・記入欄</h2>
+        <h2>５．届出情報</h2>
         <div class="row">
             <div class="col">
                 <label>解体報告記録がなされた年月日</label>
@@ -461,6 +463,32 @@
         const elements = form.querySelectorAll('input, select, textarea');
         const seen = new Set();
         const groupMap = new Map();
+        const groupSecMap = new Map();
+
+        const labelOverrides = {
+            code_71: '返納', code_80: '重還付', code_29: '移動報告番号',
+            car_no_1: '車両番号', car_no_2: '車両番号', car_no_3: '車両番号', car_no_4: '車両番号',
+            chassis_no: '車台番号',
+            app_type: '人格区分', app_kana: '氏名カナ', app_kanji: '氏名漢字',
+            addr_code_1: '住所コード', addr_code_2: '住所コード', addr_code_3: '住所コード',
+            app_zip_1: '郵便番号', app_zip_2: '郵便番号',
+            app_tel_1: '電話番号', app_tel_2: '電話番号', app_tel_3: '電話番号',
+            proxy_flag: '代理受領', joint_flag: '共同所有', owner_code: '申請者所有者コード',
+            bank_name: '金融機関名', bank_type: '金融機関種別',
+            branch_name: '支店名', branch_type: '支店種別',
+            account_no: '口座番号', account_type: '口座種類',
+            my_number: '個人番号または法人番号',
+            kaitai_year: '解体報告日', kaitai_month: '解体報告日', kaitai_day: '解体報告日',
+            txt_user_name: '届出者（使用者）氏名', txt_user_addr: '届出者（使用者）住所',
+            txt_owner_name: '届出者（所有者）氏名', txt_owner_addr: '届出者（所有者）住所'
+        };
+
+        const sectionMap = new Map();
+        let curSec = '';
+        form.querySelectorAll('h2, .form-group, .row').forEach(node => {
+            if (node.tagName === 'H2') curSec = node.textContent.trim();
+            else sectionMap.set(node, curSec);
+        });
 
         elements.forEach(el => {
             if (el.type === 'button' || el.type === 'submit') return;
@@ -496,20 +524,26 @@
             if (!valueText) valueText = '（未入力）';
 
             const isCheck = el.type === 'checkbox' || el.type === 'radio';
-            snapshot.push({ label: labelText, value: valueText });
+            const overrideLabel = labelOverrides[el.id] || labelText;
+            snapshot.push({ label: overrideLabel, value: valueText });
 
-            const groupKey = group || ('_ungrouped_' + snapshot.length);
+            const groupKey = group || labelOverrides[el.id] || ('_ungrouped_' + snapshot.length);
             if (!groupMap.has(groupKey)) groupMap.set(groupKey, []);
-            groupMap.get(groupKey).push({ label: labelText, value: valueText, isCheck });
+            groupMap.get(groupKey).push({ label: overrideLabel, value: valueText, isCheck });
+
+            if (!groupSecMap.has(groupKey)) {
+                if (group && sectionMap.has(group)) {
+                    groupSecMap.set(groupKey, sectionMap.get(group));
+                } else {
+                    const row = el.closest('.row');
+                    if (row && sectionMap.has(row)) {
+                        groupSecMap.set(groupKey, sectionMap.get(row));
+                    }
+                }
+            }
         });
 
         if (renderToDom && list) {
-            const sectionMap = new Map();
-            let curSec = '';
-            form.querySelectorAll('h2, .form-group').forEach(node => {
-                if (node.tagName === 'H2') curSec = node.textContent.trim();
-                else sectionMap.set(node, curSec);
-            });
             let lastSec = '';
             const renderRow = (part) => {
                 const row = document.createElement('div');
@@ -527,8 +561,8 @@
                 }
                 list.appendChild(row);
             };
-            for (const [groupEl, items] of groupMap) {
-                const sec = (groupEl instanceof Element) ? (sectionMap.get(groupEl) || '') : '';
+            for (const [groupKey, items] of groupMap) {
+                const sec = groupSecMap.get(groupKey) || '';
                 if (sec && sec !== lastSec) {
                     const hdr = document.createElement('div');
                     hdr.className = 'confirm-section';

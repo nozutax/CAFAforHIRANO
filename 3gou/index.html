@@ -146,7 +146,7 @@
             <div class="row ocr-row-even">
                 <div class="col-equal">
                     <label>①業務</label>
-                    <input type="text" id="ocr_1_gyomu" maxlength="1" class="ocr">
+                    <input type="text" id="ocr_1_gyomu" maxlength="1" class="ocr" style="width: 3em; text-align: center;">
                 </div>
             </div>
         </div>
@@ -157,28 +157,35 @@
                 <div class="col">
                     <label>⑫希望自動車登録番号</label>
                     <div class="row" style="gap:5px">
-                        <input type="text" id="hope_class" maxlength="3" placeholder="300" class="ocr" style="flex:1">
-                        <input type="text" id="hope_hira" maxlength="1" placeholder="あ" style="flex:1">
-                        <input type="text" id="hope_no" maxlength="4" placeholder="1234" class="ocr" style="flex:1">
+                        <input type="text" id="hope_class" maxlength="3" placeholder="300" class="ocr" style="width: 5em; text-align: center;">
+                        <input type="text" id="hope_hira" maxlength="1" placeholder="あ" style="width: 3em; text-align: center;">
+                        <input type="text" id="hope_no" maxlength="4" placeholder="1234" class="ocr" style="width: 6.5em; text-align: center;">
                     </div>
                 </div>
-                <div class="col" style="flex:1.5">
+            </div>
+            <div class="row">
+                <div class="col">
                     <label>㉒車台番号 </label>
-                    <input type="text" id="chassis_no" maxlength="23" placeholder="1234567" class="ocr" style="text-align:center;">
+                    <input type="text" id="chassis_no" maxlength="23" placeholder="1234567" class="ocr" style="width: 25em; max-width: 100%; text-align: center;">
                 </div>
             </div>
+        </div>
 
+        <h2>3. 登録番号・整備工場</h2>
+        <div class="form-section">
             <div class="row">
                 <div class="col">
                     <label>㉑自動車登録番号</label>
                     <div class="row" style="gap:5px">
-                        <input type="text" id="reg_area" maxlength="4" placeholder="品川" style="flex:1">
-                        <input type="text" id="reg_class" maxlength="3" placeholder="300" class="ocr" style="flex:1">
-                        <input type="text" id="reg_hira" maxlength="1" placeholder="わ" style="flex:1">
-                        <input type="text" id="reg_no" maxlength="4" placeholder="1234" class="ocr" style="flex:1">
+                        <input type="text" id="reg_area" maxlength="4" placeholder="品川" style="width: 6.5em; text-align: center;">
+                        <input type="text" id="reg_class" maxlength="3" placeholder="300" class="ocr" style="width: 5em; text-align: center;">
+                        <input type="text" id="reg_hira" maxlength="1" placeholder="わ" style="width: 3em; text-align: center;">
+                        <input type="text" id="reg_no" maxlength="4" placeholder="1234" class="ocr" style="width: 6.5em; text-align: center;">
                     </div>
                 </div>
-                <div class="col" style="flex:1.5">
+            </div>
+            <div class="row">
+                <div class="col">
                     <label>㉓整備工場コード</label>
                     <div class="row" style="gap:8px; align-items:center;">
                         <input type="text" id="garage_code_1" maxlength="2" class="ocr" placeholder="12" style="width:4em; min-width:4em; text-align:center;">
@@ -256,6 +263,21 @@
         const elements = form.querySelectorAll('input, select, textarea');
         const seen = new Set();
         const groupMap = new Map();
+        const groupSecMap = new Map();
+
+        const sectionMap = new Map();
+        let curSec = '';
+        form.querySelectorAll('h2, .form-group, .form-section').forEach(node => {
+            if (node.tagName === 'H2') curSec = node.textContent.trim();
+            else sectionMap.set(node, curSec);
+        });
+
+        const labelOverrides = {
+            'hope_class': '希望番号', 'hope_hira': '希望番号', 'hope_no': '希望番号',
+            'chassis_no': '車体番号',
+            'reg_area': '登録番号', 'reg_class': '登録番号', 'reg_hira': '登録番号', 'reg_no': '登録番号',
+            'garage_code_1': '整備工場コード', 'garage_code_2': '整備工場コード',
+        };
 
         elements.forEach(el => {
             if (el.type === 'button' || el.type === 'submit') return;
@@ -275,6 +297,8 @@
                 labelText = el.id || el.name || '項目';
             }
 
+            if (labelOverrides[el.id]) labelText = labelOverrides[el.id];
+
             const key = `${labelText}|${el.name}|${el.id}`;
             if (seen.has(key)) return;
             seen.add(key);
@@ -293,18 +317,22 @@
             const isCheck = el.type === 'checkbox' || el.type === 'radio';
             snapshot.push({ label: labelText, value: valueText });
 
-            const groupKey = group || ('_ungrouped_' + snapshot.length);
+            const groupKey = group || labelOverrides[el.id] || ('_ungrouped_' + snapshot.length);
             if (!groupMap.has(groupKey)) groupMap.set(groupKey, []);
             groupMap.get(groupKey).push({ label: labelText, value: valueText, isCheck });
+
+            if (!groupSecMap.has(groupKey)) {
+                let sec = '';
+                if (group) sec = sectionMap.get(group) || '';
+                if (!sec) {
+                    const fs = el.closest('.form-section');
+                    if (fs) sec = sectionMap.get(fs) || '';
+                }
+                groupSecMap.set(groupKey, sec);
+            }
         });
 
         if (renderToDom && list) {
-            const sectionMap = new Map();
-            let curSec = '';
-            form.querySelectorAll('h2, .form-group').forEach(node => {
-                if (node.tagName === 'H2') curSec = node.textContent.trim();
-                else sectionMap.set(node, curSec);
-            });
             let lastSec = '';
             const renderRow = (part) => {
                 const row = document.createElement('div');
@@ -322,8 +350,8 @@
                 }
                 list.appendChild(row);
             };
-            for (const [groupEl, items] of groupMap) {
-                const sec = (groupEl instanceof Element) ? (sectionMap.get(groupEl) || '') : '';
+            for (const [groupKey, items] of groupMap) {
+                const sec = groupSecMap.get(groupKey) || '';
                 if (sec && sec !== lastSec) {
                     const hdr = document.createElement('div');
                     hdr.className = 'confirm-section';

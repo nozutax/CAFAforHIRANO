@@ -249,7 +249,7 @@
 
     <form id="pdfForm">
 
-        <h2>基本情報</h2>
+        <h2>１．基本情報</h2>
         <div class="form-group">
             <label></label>
             <div class="row" style="align-items: flex-end;">
@@ -281,7 +281,7 @@
             </div>
         </div>
 
-        <h2>希望番号</h2>
+        <h2>２．希望番号</h2>
         <div class="form-group">
             <div class="row" style="align-items: flex-end;">
                 <div class="col" style="flex: 0 0 100px;">
@@ -299,45 +299,45 @@
             </div>
         </div>
 
-        <h2>車両情報</h2>
+        <h2>３．車両情報</h2>
         <div class="form-group">
             <label>①車両番号（現在のナンバー）</label>
-            <div class="row">
-                <input type="text" id="car_no_1" placeholder="練馬" style="flex:2">
-                <input type="text" id="car_no_2" placeholder="580" style="flex:2">
-                <input type="text" id="car_no_3" placeholder="あ" style="flex:1">
-                <input type="text" id="car_no_4" maxlength="4" placeholder="1234" style="flex:3">
+            <div class="row" style="justify-content: flex-start; gap: 5px;">
+                <input type="text" id="car_no_1" placeholder="練馬" style="width: 6.5em; text-align: center;">
+                <input type="text" id="car_no_2" placeholder="580" style="width: 5em; text-align: center;">
+                <input type="text" id="car_no_3" placeholder="あ" style="width: 3em; text-align: center;">
+                <input type="text" id="car_no_4" maxlength="4" placeholder="1234" style="width: 6.5em; text-align: center;">
             </div>
         </div>
         <div class="form-group">
             <label>③車台番号（下7桁など）</label>
-            <input type="text" id="chassis_no" maxlength="20" placeholder="ABC1234567">
+            <input type="text" id="chassis_no" maxlength="20" placeholder="ABC1234567" style="width: 22em;">
         </div>
 
-        <h2>使用者欄</h2>
+        <h2>４．使用者欄</h2>
         <div class="form-group">
             <label>氏名又は名称</label>
             <input type="text" id="user_name" placeholder="軽 太郎">
         </div>
         <div class="form-group">
             <label>住所</label>
-            <div class="row" style="align-items: flex-end;">
-                <div class="col">
+            <div class="row" style="align-items: flex-end; justify-content: flex-start;">
+                <div style="flex: none;">
                     <label class="hint" style="margin-bottom:4px;">都道府県市区郡コード（12桁）</label>
-                    <input type="text" id="user_address_code" maxlength="12" placeholder="1310001など">
+                    <input type="text" id="user_address_code" maxlength="12" placeholder="1310001など" style="width: 14em; text-align: center;">
                 </div>
-                <div class="col">
+                <div style="flex: none;">
                     <label class="hint" style="margin-bottom:4px;">丁目</label>
-                    <input type="text" id="user_addr_chome" placeholder="丁目">
+                    <input type="text" id="user_addr_chome" placeholder="丁目" style="width: 5em; text-align: center;">
                 </div>
-                <div class="col">
+                <div style="flex: none;">
                     <label class="hint" style="margin-bottom:4px;">番地</label>
-                    <input type="text" id="user_addr_banchi" placeholder="番地">
+                    <input type="text" id="user_addr_banchi" placeholder="番地" style="width: 10em;">
                 </div>
             </div>
         </div>
 
-        <h2>所有者欄</h2>
+        <h2>５．所有者欄</h2>
         <div class="form-group">
             <div class="label-row">
                 <label>氏名又は名称</label>
@@ -350,18 +350,18 @@
                 <label>住所</label>
                 <label class="inline-check"><input type="checkbox" id="chk_owner_addr_same" onchange="toggleSame('owner_addr')"> 使用者住所に同じ</label>
             </div>
-            <div class="row" style="align-items: flex-end;">
-                <div class="col">
+            <div class="row" style="align-items: flex-end; justify-content: flex-start;">
+                <div style="flex: none;">
                     <label class="hint" style="margin-bottom:4px;">都道府県市区郡コード（12桁）</label>
-                    <input type="text" id="owner_address_code" maxlength="12" placeholder="1310001など">
+                    <input type="text" id="owner_address_code" maxlength="12" placeholder="1310001など" style="width: 14em; text-align: center;">
                 </div>
-                <div class="col">
+                <div style="flex: none;">
                     <label class="hint" style="margin-bottom:4px;">丁目</label>
-                    <input type="text" id="owner_addr_chome" placeholder="丁目">
+                    <input type="text" id="owner_addr_chome" placeholder="丁目" style="width: 5em; text-align: center;">
                 </div>
-                <div class="col">
+                <div style="flex: none;">
                     <label class="hint" style="margin-bottom:4px;">番地</label>
-                    <input type="text" id="owner_addr_banchi" placeholder="番地">
+                    <input type="text" id="owner_addr_banchi" placeholder="番地" style="width: 10em;">
                 </div>
             </div>
         </div>
@@ -370,29 +370,29 @@
             <input type="text" id="owner_code" maxlength="5" placeholder="5桁">
         </div>
 
-        <h2>使用の本拠の位置</h2>
+        <h2>６．使用の本拠の位置</h2>
         <div class="form-group">
             <div class="label-row">
                 <label>住所</label>
                 <label class="inline-check"><input type="checkbox" id="chk_base_same" onchange="toggleSame('base')"> 使用者住所に同じ</label>
             </div>
-            <div class="row" style="align-items: flex-end;">
-                <div class="col">
+            <div class="row" style="align-items: flex-end; justify-content: flex-start;">
+                <div style="flex: none;">
                     <label class="hint" style="margin-bottom:4px;">都道府県市区郡コード（12桁）</label>
-                    <input type="text" id="base_address_code" maxlength="12" placeholder="1310001など">
+                    <input type="text" id="base_address_code" maxlength="12" placeholder="1310001など" style="width: 14em; text-align: center;">
                 </div>
-                <div class="col">
+                <div style="flex: none;">
                     <label class="hint" style="margin-bottom:4px;">丁目</label>
-                    <input type="text" id="base_addr_chome" placeholder="丁目">
+                    <input type="text" id="base_addr_chome" placeholder="丁目" style="width: 5em; text-align: center;">
                 </div>
-                <div class="col">
+                <div style="flex: none;">
                     <label class="hint" style="margin-bottom:4px;">番地</label>
-                    <input type="text" id="base_addr_banchi" placeholder="番地">
+                    <input type="text" id="base_addr_banchi" placeholder="番地" style="width: 10em;">
                 </div>
             </div>
         </div>
 
-        <h2>その他欄</h2>
+        <h2>７．その他欄</h2>
         <div class="form-group">
             <label class="hint" style="margin-bottom:6px;">⑩型式指定番号・類別区分番号</label>
             <div class="row" style="align-items: center; gap: 8px;">
@@ -421,7 +421,7 @@
             </div>
         </div>
 
-        <h2>申請人</h2>
+        <h2>８．申請人</h2>
         <div class="applicant-section">
             <div class="applicant-block">
                 <div class="block-title-row">
@@ -504,6 +504,21 @@
         const elements = form.querySelectorAll('input, select, textarea');
         const seen = new Set();
         const groupMap = new Map();
+        const groupSecMap = new Map();
+
+        const sectionMap = new Map();
+        let curSec = '';
+        form.querySelectorAll('h2, .form-group').forEach(node => {
+            if (node.tagName === 'H2') curSec = node.textContent.trim();
+            else sectionMap.set(node, curSec);
+        });
+
+        const labelOverrides = {
+            'code_50_gyomu': '業務', 'code_51_num': '車両提示',
+            'code_55_use_1': '用途１', 'code_55_use_2': '用途２',
+            'code_55_hyo_1': '標板１', 'code_55_hyo_2': '標板２',
+            'hope_no_1': '希望ナンバー', 'hope_no_2': '希望ナンバー', 'hope_no_3': '希望ナンバー',
+        };
 
         elements.forEach(el => {
             if (el.type === 'button' || el.type === 'submit') return;
@@ -523,7 +538,7 @@
                 labelText = el.id || el.name || '項目';
             }
 
-            if (/^hope_no_\d+$/.test(el.id)) labelText = '希望ナンバー';
+            if (labelOverrides[el.id]) labelText = labelOverrides[el.id];
 
             const key = `${labelText}|${el.name}|${el.id}`;
             if (seen.has(key)) return;
@@ -543,18 +558,18 @@
             const isCheck = el.type === 'checkbox' || el.type === 'radio';
             snapshot.push({ label: labelText, value: valueText });
 
-            const groupKey = group || ('_ungrouped_' + snapshot.length);
+            const groupKey = group || labelOverrides[el.id] || ('_ungrouped_' + snapshot.length);
             if (!groupMap.has(groupKey)) groupMap.set(groupKey, []);
             groupMap.get(groupKey).push({ label: labelText, value: valueText, isCheck });
+
+            if (!groupSecMap.has(groupKey)) {
+                let sec = '';
+                if (group) sec = sectionMap.get(group) || '';
+                groupSecMap.set(groupKey, sec);
+            }
         });
 
         if (renderToDom && list) {
-            const sectionMap = new Map();
-            let curSec = '';
-            form.querySelectorAll('h2, .form-group').forEach(node => {
-                if (node.tagName === 'H2') curSec = node.textContent.trim();
-                else sectionMap.set(node, curSec);
-            });
             let lastSec = '';
             const renderRow = (part) => {
                 const row = document.createElement('div');
@@ -572,8 +587,8 @@
                 }
                 list.appendChild(row);
             };
-            for (const [groupEl, items] of groupMap) {
-                const sec = (groupEl instanceof Element) ? (sectionMap.get(groupEl) || '') : '';
+            for (const [groupKey, items] of groupMap) {
+                const sec = groupSecMap.get(groupKey) || '';
                 if (sec && sec !== lastSec) {
                     const hdr = document.createElement('div');
                     hdr.className = 'confirm-section';
