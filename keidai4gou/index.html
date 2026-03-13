@@ -166,6 +166,18 @@
             color: #9ca3af;
             margin: 0 4px;
         }
+        .confirm-section {
+            font-weight: bold;
+            font-size: 13px;
+            color: #2563eb;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 4px;
+            margin-top: 12px;
+            margin-bottom: 6px;
+        }
+        .confirm-section:first-child {
+            margin-top: 0;
+        }
         .modal-actions {
             display: flex;
             justify-content: flex-end;
@@ -299,7 +311,8 @@
             const group = el.closest('.form-group');
             const groupLabel = group ? group.querySelector('label') : null;
 
-            const labelSource = labelByFor || closestLabel || groupLabel;
+            const inlineLabel = el.closest('.inline-check') || el.closest('.block-check');
+            const labelSource = labelByFor || closestLabel || inlineLabel || groupLabel;
             if (labelSource) {
                 labelText = labelSource.textContent.trim().replace(/\s+/g, ' ');
             }
@@ -322,30 +335,55 @@
             }
             if (!valueText) valueText = '（未入力）';
 
-            const item = { label: labelText, value: valueText };
-            snapshot.push(item);
+            const isCheck = el.type === 'checkbox' || el.type === 'radio';
+            snapshot.push({ label: labelText, value: valueText });
 
             const groupKey = group || ('_ungrouped_' + snapshot.length);
             if (!groupMap.has(groupKey)) groupMap.set(groupKey, []);
-            groupMap.get(groupKey).push(item);
+            groupMap.get(groupKey).push({ label: labelText, value: valueText, isCheck });
         });
 
         if (renderToDom && list) {
-            for (const [, items] of groupMap) {
+            const sectionMap = new Map();
+            let curSec = '';
+            form.querySelectorAll('h2, .form-group').forEach(node => {
+                if (node.tagName === 'H2') curSec = node.textContent.trim();
+                else sectionMap.set(node, curSec);
+            });
+            let lastSec = '';
+            const renderRow = (part) => {
                 const row = document.createElement('div');
                 row.className = 'confirm-row';
-                const allSameLabel = items.length > 1 && items.every(it => it.label === items[0].label);
-                if (items.length === 1) {
-                    row.innerHTML = `<span class="confirm-label">${items[0].label}</span><span class="confirm-value">${items[0].value}</span>`;
+                const allSameLabel = part.length > 1 && part.every(it => it.label === part[0].label);
+                if (part.length === 1) {
+                    row.innerHTML = `<span class="confirm-label">${part[0].label}</span><span class="confirm-value">${part[0].value}</span>`;
                 } else if (allSameLabel) {
-                    row.innerHTML = `<span class="confirm-label">${items[0].label}</span>` +
-                        items.map(it => `<span class="confirm-value">${it.value}</span>`).join('<span class="confirm-sep">／</span>');
+                    row.innerHTML = `<span class="confirm-label">${part[0].label}</span>` +
+                        part.map(it => `<span class="confirm-value">${it.value}</span>`).join('<span class="confirm-sep">／</span>');
                 } else {
-                    row.innerHTML = items.map(it =>
+                    row.innerHTML = part.map(it =>
                         `<span class="confirm-label">${it.label}</span><span class="confirm-value">${it.value}</span>`
                     ).join('<span class="confirm-sep">／</span>');
                 }
                 list.appendChild(row);
+            };
+            for (const [groupEl, items] of groupMap) {
+                const sec = (groupEl instanceof Element) ? (sectionMap.get(groupEl) || '') : '';
+                if (sec && sec !== lastSec) {
+                    const hdr = document.createElement('div');
+                    hdr.className = 'confirm-section';
+                    hdr.textContent = sec;
+                    list.appendChild(hdr);
+                    lastSec = sec;
+                }
+                const checks = items.filter(it => it.isCheck);
+                const others = items.filter(it => !it.isCheck);
+                if (checks.length > 0 && others.length > 0) {
+                    renderRow(checks);
+                    renderRow(others);
+                } else {
+                    renderRow(items);
+                }
             }
         }
 
