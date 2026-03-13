@@ -340,7 +340,8 @@
 
             let valueText = '';
             if (el.type === 'checkbox' || el.type === 'radio') {
-                valueText = el.checked ? '✔ チェックあり' : '— チェックなし';
+                if (!el.checked) return;
+                valueText = '✔ チェックあり';
             } else if (el.tagName === 'SELECT') {
                 const opt = el.options[el.selectedIndex];
                 valueText = (opt && opt.text) ? opt.text : '';
