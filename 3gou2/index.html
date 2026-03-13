@@ -174,6 +174,7 @@
         }
         .confirm-row {
             margin-bottom: 6px;
+            line-height: 1.6;
         }
         .confirm-label {
             font-weight: bold;
@@ -183,6 +184,10 @@
         }
         .confirm-value {
             color: #111827;
+        }
+        .confirm-sep {
+            color: #9ca3af;
+            margin: 0 4px;
         }
         .modal-actions {
             display: flex;
@@ -350,6 +355,7 @@
         const form = document.getElementById('pdfForm');
         const elements = form.querySelectorAll('input, select, textarea');
         const seen = new Set();
+        const groupMap = new Map();
 
         elements.forEach(el => {
             if (el.type === 'button' || el.type === 'submit') return;
@@ -386,13 +392,29 @@
             const item = { label: labelText, value: valueText };
             snapshot.push(item);
 
-            if (renderToDom && list) {
+            const groupKey = group || ('_ungrouped_' + snapshot.length);
+            if (!groupMap.has(groupKey)) groupMap.set(groupKey, []);
+            groupMap.get(groupKey).push(item);
+        });
+
+        if (renderToDom && list) {
+            for (const [, items] of groupMap) {
                 const row = document.createElement('div');
                 row.className = 'confirm-row';
-                row.innerHTML = `<span class="confirm-label">${item.label}</span><span class="confirm-value">${item.value}</span>`;
+                const allSameLabel = items.length > 1 && items.every(it => it.label === items[0].label);
+                if (items.length === 1) {
+                    row.innerHTML = `<span class="confirm-label">${items[0].label}</span><span class="confirm-value">${items[0].value}</span>`;
+                } else if (allSameLabel) {
+                    row.innerHTML = `<span class="confirm-label">${items[0].label}</span>` +
+                        items.map(it => `<span class="confirm-value">${it.value}</span>`).join('<span class="confirm-sep">／</span>');
+                } else {
+                    row.innerHTML = items.map(it =>
+                        `<span class="confirm-label">${it.label}</span><span class="confirm-value">${it.value}</span>`
+                    ).join('<span class="confirm-sep">／</span>');
+                }
                 list.appendChild(row);
             }
-        });
+        }
 
         return snapshot;
     }
