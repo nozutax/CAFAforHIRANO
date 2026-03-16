@@ -226,12 +226,12 @@
         <!-- 申請車種 -->
         <h2>２．申請車種</h2>
         <div class="form-group">
-            <div class="radio-group">
-                <label class="radio-label"><input type="radio" name="car_type" value="small_pass"> 小型乗用</label>
-                <label class="radio-label"><input type="radio" name="car_type" value="normal_pass"> 普通乗用</label>
-                <label class="radio-label"><input type="radio" name="car_type" value="small_cargo"> 小型貨物</label>
-                <label class="radio-label"><input type="radio" name="car_type" value="normal_cargo"> 普通貨物</label>
-                <label class="radio-label"><input type="radio" name="car_type" value="other"> その他</label>
+            <div class="checkbox-group">
+                <label class="checkbox-label"><input type="checkbox" name="car_type" value="small_pass"> 小型乗用</label>
+                <label class="checkbox-label"><input type="checkbox" name="car_type" value="normal_pass"> 普通乗用</label>
+                <label class="checkbox-label"><input type="checkbox" name="car_type" value="small_cargo"> 小型貨物</label>
+                <label class="checkbox-label"><input type="checkbox" name="car_type" value="normal_cargo"> 普通貨物</label>
+                <label class="checkbox-label"><input type="checkbox" name="car_type" value="other"> その他</label>
             </div>
         </div>
         <div class="form-group" id="car_type_other_text_group" style="margin-top:8px; display:none;">
@@ -242,14 +242,14 @@
         <!-- 申請事由 -->
         <h2>３．申請事由</h2>
         <div class="form-group">
-            <div class="radio-group">
+            <div class="checkbox-group">
                 <!-- ラベル修正: 新車(新規)→新規, 代車(代替)→代替 -->
-                <label class="radio-label"><input type="radio" name="app_reason" value="new_car"> 新規</label>
-                <label class="radio-label"><input type="radio" name="app_reason" value="sub_car"> 代替</label>
-                <label class="radio-label"><input type="radio" name="app_reason" value="name_change"> 名義変更</label>
-                <label class="radio-label"><input type="radio" name="app_reason" value="business_car"> 商用車</label>
-                <label class="radio-label"><input type="radio" name="app_reason" value="other"> その他</label>
-                <label class="radio-label"><input type="radio" name="app_reason" value="add_car"> 増車</label>
+                <label class="checkbox-label"><input type="checkbox" name="app_reason" value="new_car"> 新規</label>
+                <label class="checkbox-label"><input type="checkbox" name="app_reason" value="sub_car"> 代替</label>
+                <label class="checkbox-label"><input type="checkbox" name="app_reason" value="name_change"> 名義変更</label>
+                <label class="checkbox-label"><input type="checkbox" name="app_reason" value="business_car"> 商用車</label>
+                <label class="checkbox-label"><input type="checkbox" name="app_reason" value="other"> その他</label>
+                <label class="checkbox-label"><input type="checkbox" name="app_reason" value="add_car"> 増車</label>
             </div>
         </div>
         <div class="form-group" id="app_reason_add_text_group" style="margin-top:8px; display:none;">
@@ -567,13 +567,6 @@
         };
 
         const v = (id) => document.getElementById(id).value;
-        const getRadio = (name) => {
-            const els = document.getElementsByName(name);
-            for (let el of els) {
-                if (el.checked) return el.value;
-            }
-            return null;
-        };
         const getCheckboxes = (name) => {
             const els = document.getElementsByName(name);
             return Array.from(els).filter(el => el.checked).map(el => el.value);
@@ -596,20 +589,24 @@
         const reasonY = height - 254;
 
         // 申請車種（小型乗用・普通乗用・小型貨物・普通貨物・その他）
-        const carTypeVal = getRadio('car_type');
-        if (carTypeVal === 'small_pass') {
+        const carTypeVals = getCheckboxes('car_type');
+        if (carTypeVals.includes('small_pass')) {
             // 小型乗用
             drawCircleMark(225, carTypeY);
-        } else if (carTypeVal === 'normal_pass') {
+        }
+        if (carTypeVals.includes('normal_pass')) {
             // 普通乗用
             drawCircleMark(315, carTypeY);
-        } else if (carTypeVal === 'small_cargo') {
+        }
+        if (carTypeVals.includes('small_cargo')) {
             // 小型貨物
             drawCircleMark(395, carTypeY); 
-        } else if (carTypeVal === 'normal_cargo') {
+        }
+        if (carTypeVals.includes('normal_cargo')) {
             // 普通貨物
             drawCircleMark(480, carTypeY);
-        } else if (carTypeVal === 'other') {
+        }
+        if (carTypeVals.includes('other')) {
             // その他
             drawCircleMark(570, carTypeY);
             // その他の内容テキスト（〇の右側に出力）
@@ -620,20 +617,24 @@
         }
 
         // 申請事由（新規・代替・名義変更・商用車・増車・その他）
-        const reasonVal = getRadio('app_reason');
-        if (reasonVal === 'new_car') {
+        const reasonVals = getCheckboxes('app_reason');
+        if (reasonVals.includes('new_car')) {
             // 新規
             drawCircleMark(225, reasonY);
-        } else if (reasonVal === 'sub_car') {
+        }
+        if (reasonVals.includes('sub_car')) {
             // 代替
             drawCircleMark(315, reasonY);
-        } else if (reasonVal === 'name_change') {
+        }
+        if (reasonVals.includes('name_change')) {
             // 名義変更
             drawCircleMark(410, reasonY);
-        } else if (reasonVal === 'business_car') {
+        }
+        if (reasonVals.includes('business_car')) {
             // 商用車
             drawCircleMark(500, reasonY);
-        } else if (reasonVal === 'add_car') {
+        }
+        if (reasonVals.includes('add_car')) {
             // 増車
             drawCircleMark(225, reasonY - 26);
             // 増車の内容テキスト（〇の下側に出力）
@@ -641,7 +642,8 @@
             if (addText) {
                 drawText(addText, 220, reasonY - 47, );
             }
-        } else if (reasonVal === 'other') {
+        }
+        if (reasonVals.includes('other')) {
             // その他
             drawCircleMark(590, reasonY);
         }

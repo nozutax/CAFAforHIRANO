@@ -544,7 +544,8 @@
             const closestLabel = el.closest('label');
             const group = el.closest('.form-group');
             const groupLabel = group ? group.querySelector('label') : null;
-            const inlineLabel = el.closest('.inline-check') || el.closest('.block-check');
+            const blockCheck = el.closest('.block-check');
+            const inlineLabel = el.closest('.inline-check') || blockCheck;
 
             const labelSource = labelByFor || closestLabel || inlineLabel || groupLabel;
             if (labelSource) {
@@ -575,7 +576,7 @@
             const isCheck = el.type === 'checkbox' || el.type === 'radio';
             snapshot.push({ label: labelText, value: valueText });
 
-            const groupKey = group || ('_ungrouped_' + snapshot.length);
+            const groupKey = group || blockCheck || ('_ungrouped_' + snapshot.length);
             if (!groupMap.has(groupKey)) groupMap.set(groupKey, []);
             groupMap.get(groupKey).push({ label: labelText, value: valueText, isCheck });
         });
@@ -583,11 +584,18 @@
         if (renderToDom && list) {
             const sectionMap = new Map();
             let curSec = '';
-            form.querySelectorAll('h2, .form-group').forEach(node => {
+            form.querySelectorAll('h2, .form-group, .block-check').forEach(node => {
                 if (node.tagName === 'H2') curSec = node.textContent.trim();
                 else sectionMap.set(node, curSec);
             });
             let lastSec = '';
+            let lastApplicantSub = '';
+            const renderSectionHeader = (text) => {
+                const hdr = document.createElement('div');
+                hdr.className = 'confirm-section';
+                hdr.textContent = text;
+                list.appendChild(hdr);
+            };
             const renderRow = (part) => {
                 const row = document.createElement('div');
                 row.className = 'confirm-row';
@@ -607,12 +615,24 @@
             for (const [groupEl, items] of groupMap) {
                 const sec = (groupEl instanceof Element) ? (sectionMap.get(groupEl) || '') : '';
                 if (sec && sec !== lastSec) {
-                    const hdr = document.createElement('div');
-                    hdr.className = 'confirm-section';
-                    hdr.textContent = sec;
-                    list.appendChild(hdr);
+                    renderSectionHeader(sec);
                     lastSec = sec;
+                    lastApplicantSub = '';
                 }
+
+                // 「申請人」内の中項目（新所有者・現所有者／使用者／旧所有者など）用の小見出し
+                if (sec === '申請人' && groupEl instanceof Element) {
+                    const applicantBlock = groupEl.closest('.applicant-block');
+                    if (applicantBlock) {
+                        const titleEl = applicantBlock.querySelector('.block-title');
+                        const subTitle = titleEl ? titleEl.textContent.trim() : '';
+                        if (subTitle && subTitle !== lastApplicantSub) {
+                            renderSectionHeader(subTitle);
+                            lastApplicantSub = subTitle;
+                        }
+                    }
+                }
+
                 const checks = items.filter(it => it.isCheck);
                 const others = items.filter(it => !it.isCheck);
                 if (checks.length > 0 && others.length > 0) {
