@@ -507,7 +507,15 @@
         drawText(v('car_num_1'), 45, ROW_2_Y, 12, 33); 
         drawText(v('car_num_2'), 173, ROW_2_Y, 12, BOX_WIDTH);
         drawText(v('car_num_3'), 240, ROW_2_Y, 12);
-        drawText(v('car_num_4'), 272, ROW_2_Y, 12, BOX_WIDTH);
+        // 下4桁（car_num_4）は右詰め
+        (function () {
+            const carNo = v('car_num_4');
+            if (!carNo) return;
+            const fieldLeft = 272;
+            const fieldRight = fieldLeft + 4 * BOX_WIDTH; // 4桁枠の右端基準
+            const startX = fieldRight - String(carNo).length * BOX_WIDTH;
+            drawText(carNo, startX, ROW_2_Y, 12, BOX_WIDTH); // 右詰（マス内）
+        })();
         drawText(v('chassis_num'), 365, ROW_2_Y, 12, BOX_WIDTH);
         drawText(v('factory_code_1'), 680, ROW_2_Y, 12, BOX_WIDTH);
         drawText(v('factory_code_2'), 723, ROW_2_Y, 12, BOX_WIDTH);

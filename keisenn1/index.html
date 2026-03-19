@@ -640,13 +640,29 @@
         // 2. 希望車両番号（Y=510）※地域名・小板なし
         drawText(v('hope_car_num_1'), 170, 495, 12, BOX_WIDTH);
         drawText(v('hope_car_num_2'), 235, 495, 12);
-        drawText(v('hope_car_num_3'), 270, 495, 12, BOX_WIDTH);
+        // 下4桁（hope_car_num_3）は右詰め
+        (function () {
+            const hope4 = v('hope_car_num_3');
+            if (!hope4) return;
+            const fieldLeft = 270;
+            const fieldRight = fieldLeft + 4 * BOX_WIDTH; // 4桁枠の右端基準
+            const startX = fieldRight - String(hope4).length * BOX_WIDTH;
+            drawText(hope4, startX, 495, 12, BOX_WIDTH);
+        })();
 
         // 3. 車両番号 
         drawText(v('car_num_1'), 40, 445, 12, 32); 
         drawText(v('car_num_2'), 170, 445, 12, BOX_WIDTH);
         drawText(v('car_num_3'), 235, 445, 12);
-        drawText(v('car_num_4'), 270, 445, 12, BOX_WIDTH);
+        // 下4桁（car_num_4）は右詰め
+        (function () {
+            const car4 = v('car_num_4');
+            if (!car4) return;
+            const fieldLeft = 270;
+            const fieldRight = fieldLeft + 4 * BOX_WIDTH; // 4桁枠の右端基準
+            const startX = fieldRight - String(car4).length * BOX_WIDTH;
+            drawText(car4, startX, 445, 12, BOX_WIDTH);
+        })();
         drawText(v('car_num_5'), 345, 445, 12);
 
         // 4. 車台番号

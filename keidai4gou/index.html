@@ -514,7 +514,15 @@
         drawText(v('car_num_1'), 45,  Y_OCR, 12, 30);     // 地域(品川) ※マスがない場合が多いのでベタ打ち
         drawText(v('car_num_2'), 170, Y_OCR, 12, BOX_W); // 580 (マスあり)
         drawText(v('car_num_3'), 233, Y_OCR, 12);        // あ (マスあり)
-        drawText(v('car_num_4'), 270, Y_OCR, 12, BOX_W); // 1234 (マスあり)
+        // 下4桁（car_num_4）は右詰め
+        (function () {
+            const car4 = v('car_num_4');
+            if (!car4) return;
+            const fieldLeft = 270;
+            const fieldRight = fieldLeft + 4 * BOX_W; // 4桁枠の右端基準
+            const startX = fieldRight - String(car4).length * BOX_W;
+            drawText(car4, startX, Y_OCR, 12, BOX_W); // 1234（右詰）
+        })();
 
         // 3 車台番号 (下7桁)
         drawText(v('chassis_num'), 378, Y_OCR, 12, BOX_W); // 右側のマス

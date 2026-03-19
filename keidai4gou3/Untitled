@@ -232,7 +232,15 @@
         drawText(v('car_num_1'), 40, 485, 12, 30); 
         drawText(v('car_num_2'), 170, 485, 12, BOX_WIDTH);
         drawText(v('car_num_3'), 240, 485, 12);
-        drawText(v('car_num_4'), 270, 485, 12, BOX_WIDTH);
+        // 下4桁（car_num_4）は右詰め
+        (function () {
+            const car4 = v('car_num_4');
+            if (!car4) return;
+            const fieldLeft = 270;
+            const fieldRight = fieldLeft + 4 * BOX_WIDTH; // 4桁枠の右端基準
+            const startX = fieldRight - String(car4).length * BOX_WIDTH;
+            drawText(car4, startX, 485, 12, BOX_WIDTH);
+        })();
         drawText(v('car_num_5'), 345, 485, 12);
 
         // 4. 車台番号

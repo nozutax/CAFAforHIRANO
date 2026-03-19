@@ -739,7 +739,15 @@
 
         draw(v('hope_no_1'), 170, Y_HOPE, SZ_NUM, OCR_W);      // 3桁
         draw(v('hope_no_2'), 236, Y_HOPE, SZ_TXT);             // ひらがな
-        draw(v('hope_no_3'), 268, Y_HOPE, SZ_NUM, OCR_W);      // 4桁
+        // 4桁（hope_no_3）は右詰め
+        (function () {
+            const hope4 = v('hope_no_3');
+            if (!hope4) return;
+            const fieldLeft = 268;
+            const fieldRight = fieldLeft + 4 * OCR_W; // 4桁枠の右端基準
+            const startX = fieldRight - String(hope4).length * OCR_W;
+            draw(hope4, startX, Y_HOPE, SZ_NUM, OCR_W);
+        })();
 
         // -----------------------------------------------------------
         // 3. 車両番号・車台番号 (①・③の行)
@@ -750,7 +758,15 @@
         draw(v('car_no_1'), 45,  Y_CAR, SZ_TXT, 28);           // 練馬(漢字)
         draw(v('car_no_2'), 170, Y_CAR, SZ_NUM, OCR_W);        // 580
         draw(v('car_no_3'), 236, Y_CAR, SZ_TXT);               // ひらがな
-        draw(v('car_no_4'), 268, Y_CAR, SZ_NUM, OCR_W);        // 4桁
+        // 4桁（car_no_4）は右詰め
+        (function () {
+            const car4 = v('car_no_4');
+            if (!car4) return;
+            const fieldLeft = 268;
+            const fieldRight = fieldLeft + 4 * OCR_W; // 4桁枠の右端基準
+            const startX = fieldRight - String(car4).length * OCR_W;
+            draw(car4, startX, Y_CAR, SZ_NUM, OCR_W);
+        })();
 
         // ③車台番号 (右側の長い枠)
         draw(v('chassis_no'), 375, Y_CAR, SZ_NUM, OCR_W);

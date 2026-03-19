@@ -700,7 +700,15 @@
         draw(v('car_no_1'), 256, Y_CAR, 12,31);          // 漢字(練馬)
         draw(v('car_no_2'), 387, Y_CAR, 12, OCR_W);   // 580
         draw(v('car_no_3'), 448, Y_CAR, 12);          // あ
-        draw(v('car_no_4'), 485, Y_CAR, 12, OCR_W);   // 1234
+        // 下4桁（car_no_4）は右詰め
+        (function () {
+            const car4 = v('car_no_4');
+            if (!car4) return;
+            const fieldLeft = 485;
+            const fieldRight = fieldLeft + 4 * OCR_W; // 4桁枠の右端基準
+            const startX = fieldRight - String(car4).length * OCR_W;
+            draw(car4, startX, Y_CAR, 12, OCR_W);   // 1234（右詰）
+        })();
         // ③車台番号 (枠位置推定)
         draw(v('chassis_no'), 595, Y_CAR, 12, OCR_W);
 

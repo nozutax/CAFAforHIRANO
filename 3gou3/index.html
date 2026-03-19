@@ -730,7 +730,15 @@
         draw(v('car_area'), 390, Y_TOP, 14, 29);            // 品川
         draw(v('car_class'), 512, Y_TOP, 14, OCR_S);    // 300
         draw(v('car_hira'), 568, Y_TOP, 14);            // あ
-        draw(v('car_no'), 608, Y_TOP, 14, OCR_S);       // 1234
+        // 下4桁（car_no）は右詰め
+        (function () {
+            const carNo = v('car_no');
+            if (!carNo) return;
+            const fieldLeft = 608;
+            const fieldRight = fieldLeft + 4 * OCR_S; // 4桁枠の右端基準
+            const startX = fieldRight - String(carNo).length * OCR_S;
+            draw(carNo, startX, Y_TOP, 14, OCR_S);       // 1234（右詰）
+        })();
         
         // 車台番号 (下7桁)
         draw(v('chassis_no'), 690, Y_TOP, 14, OCR_S);

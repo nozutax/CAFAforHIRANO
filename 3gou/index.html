@@ -500,7 +500,15 @@
         // ⑫希望番号 (hope_area 削除)
         draw(v('hope_class'), 185, Y_ROW2, 14, OCR_W); // 分類
         draw(v('hope_hira'), 245, Y_ROW2, 11); // ひらがな
-        draw(v('hope_no'), 283, Y_ROW2, 14, OCR_W); // 一連
+        // 下4桁（hope_no）は右詰め
+        (function () {
+            const hopeNo = v('hope_no');
+            if (!hopeNo) return;
+            const fieldLeft = 283;
+            const fieldRight = fieldLeft + 4 * OCR_W; // 4桁枠の右端基準
+            const startX = fieldRight - String(hopeNo).length * OCR_W;
+            draw(hopeNo, startX, Y_ROW2, 14, OCR_W); // 一連（右詰）
+        })();
         
         // ㉒車台番号 (非常に長い枠)
         // 右側の長いエリア。開始X座標を調整
@@ -511,7 +519,15 @@
         draw(v('reg_area'), 53, Y_ROW3, 12,30.5);
         draw(v('reg_class'), 185, Y_ROW3, 11, OCR_W);
         draw(v('reg_hira'), 245, Y_ROW3, 11);
-        draw(v('reg_no'), 283, Y_ROW3, 11, OCR_W);
+        // 下4桁（reg_no）は右詰め
+        (function () {
+            const regNo = v('reg_no');
+            if (!regNo) return;
+            const fieldLeft = 283;
+            const fieldRight = fieldLeft + 4 * OCR_W; // 4桁枠の右端基準
+            const startX = fieldRight - String(regNo).length * OCR_W;
+            draw(regNo, startX, Y_ROW3, 11, OCR_W); // 一連（右詰）
+        })();
 
         // ㉓整備工場コード
         draw(v('garage_code_1'), 676, Y_ROW3, 14, OCR_W); // 前2桁
