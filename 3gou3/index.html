@@ -256,7 +256,7 @@
                     <label>㉑自動車登録番号</label>
                     <div class="multi-input">
                         <input type="text" id="car_area" placeholder="品川" style="width: 6.5em; text-align: center;">
-                        <input type="text" id="car_class" placeholder="300" class="ocr" style="width: 5em; text-align: center;">
+                        <input type="text" id="car_class" placeholder="300" class="ocr" style="width: 5em; text-align: right;">
                         <input type="text" id="car_hira" placeholder="あ" style="width: 3em; text-align: center;">
                         <input type="text" id="car_no" placeholder="1234" class="ocr" style="width: 6.5em; text-align: center;">
                     </div>
@@ -726,9 +726,15 @@
         draw(v('code_seigen'), 244, Y_TOP, 14, OCR_S);  // ⑰制限
         draw(v('code_kanpu'), 291, Y_TOP, 14, OCR_S);   // ⑩重還付(0/1)
 
-        // 自動車登録番号
+        // ㉑自動車登録番号：分類3桁・下4桁は右詰
         draw(v('car_area'), 390, Y_TOP, 14, 29);            // 品川
-        draw(v('car_class'), 512, Y_TOP, 14, OCR_S);    // 300
+        (function () {
+            const carClass = v('car_class');
+            if (!carClass) return;
+            const fieldRight = 512 + 3 * OCR_S;
+            const startX = fieldRight - String(carClass).length * OCR_S;
+            draw(carClass, startX, Y_TOP, 14, OCR_S);
+        })();
         draw(v('car_hira'), 568, Y_TOP, 14);            // あ
         // 下4桁（car_no）は右詰め
         (function () {

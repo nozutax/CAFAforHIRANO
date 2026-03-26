@@ -157,7 +157,7 @@
                 <div class="col">
                     <label>⑫希望自動車登録番号</label>
                     <div class="row" style="gap:5px">
-                        <input type="text" id="hope_class" maxlength="3" placeholder="300" class="ocr" style="width: 5em; text-align: center;">
+                        <input type="text" id="hope_class" maxlength="3" placeholder="300" class="ocr" style="width: 5em; text-align: right;">
                         <input type="text" id="hope_hira" maxlength="1" placeholder="あ" style="width: 3em; text-align: center;">
                         <input type="text" id="hope_no" maxlength="4" placeholder="1234" class="ocr" style="width: 6.5em; text-align: center;">
                     </div>
@@ -178,7 +178,7 @@
                     <label>㉑自動車登録番号</label>
                     <div class="row" style="gap:5px">
                         <input type="text" id="reg_area" maxlength="4" placeholder="品川" style="width: 6.5em; text-align: center;">
-                        <input type="text" id="reg_class" maxlength="3" placeholder="300" class="ocr" style="width: 5em; text-align: center;">
+                        <input type="text" id="reg_class" maxlength="3" placeholder="300" class="ocr" style="width: 5em; text-align: right;">
                         <input type="text" id="reg_hira" maxlength="1" placeholder="わ" style="width: 3em; text-align: center;">
                         <input type="text" id="reg_no" maxlength="4" placeholder="1234" class="ocr" style="width: 6.5em; text-align: center;">
                     </div>
@@ -497,8 +497,14 @@
         draw(v('ocr_1_gyomu'), 128, Y_ROW1, 14, OCR_W);
 
         // --- 2段目 (希望番号・車台番号) ---
-        // ⑫希望番号 (hope_area 削除)
-        draw(v('hope_class'), 185, Y_ROW2, 14, OCR_W); // 分類
+        // ⑫希望番号 (hope_area 削除)：分類3桁・下4桁は右詰
+        (function () {
+            const hopeClass = v('hope_class');
+            if (!hopeClass) return;
+            const fieldRight = 185 + 3 * OCR_W;
+            const startX = fieldRight - String(hopeClass).length * OCR_W;
+            draw(hopeClass, startX, Y_ROW2, 14, OCR_W);
+        })();
         draw(v('hope_hira'), 245, Y_ROW2, 11); // ひらがな
         // 下4桁（hope_no）は右詰め
         (function () {
@@ -515,9 +521,15 @@
         draw(v('chassis_no'), 372, Y_ROW2, 14, OCR_W);
 
         // --- 3段目 (登録番号・整備工場) ---
-        // ㉑登録番号
+        // ㉑登録番号：分類3桁・下4桁は右詰
         draw(v('reg_area'), 53, Y_ROW3, 12,30.5);
-        draw(v('reg_class'), 185, Y_ROW3, 11, OCR_W);
+        (function () {
+            const regClass = v('reg_class');
+            if (!regClass) return;
+            const fieldRight = 185 + 3 * OCR_W;
+            const startX = fieldRight - String(regClass).length * OCR_W;
+            draw(regClass, startX, Y_ROW3, 11, OCR_W);
+        })();
         draw(v('reg_hira'), 245, Y_ROW3, 11);
         // 下4桁（reg_no）は右詰め
         (function () {

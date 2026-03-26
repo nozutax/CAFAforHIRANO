@@ -244,7 +244,7 @@
         <div class="form-group">
             <label>希望車両番号</label>
             <div class="row" style="justify-content: flex-start; gap: 5px;">
-                <input type="text" id="hope_car_num_1" placeholder="123" style="width: 5em; text-align: center;">
+                <input type="text" id="hope_car_num_1" placeholder="123" style="width: 5em; text-align: right;">
                 <input type="text" id="hope_car_num_2" placeholder="あ" style="width: 3em; text-align: center;">
                 <input type="text" id="hope_car_num_3" placeholder="1234" style="width: 6.5em; text-align: center;">
             </div>
@@ -255,7 +255,7 @@
             <label>車両番号</label>
             <div class="row" style="justify-content: flex-start; gap: 5px;">
                 <input type="text" id="car_num_1" placeholder="地域名" style="width: 6.5em; text-align: center;">
-                <input type="text" id="car_num_2" placeholder="123" style="width: 5em; text-align: center;">
+                <input type="text" id="car_num_2" placeholder="123" style="width: 5em; text-align: right;">
                 <input type="text" id="car_num_3" placeholder="あ" style="width: 3em; text-align: center;">
                 <input type="text" id="car_num_4" placeholder="1234" style="width: 6.5em; text-align: center;">
                 <input type="text" id="car_num_5" placeholder="小板" style="width: 3em; text-align: center;">
@@ -637,8 +637,14 @@
 
         const BOX_WIDTH = 17;
 
-        // 2. 希望車両番号（Y=510）※地域名・小板なし
-        drawText(v('hope_car_num_1'), 170, 495, 12, BOX_WIDTH);
+        // 2. 希望車両番号（Y=495）※地域名・小板なし：上3桁・下4桁は右詰
+        (function () {
+            const hope3 = v('hope_car_num_1');
+            if (!hope3) return;
+            const fieldRight = 170 + 3 * BOX_WIDTH;
+            const startX = fieldRight - String(hope3).length * BOX_WIDTH;
+            drawText(hope3, startX, 495, 12, BOX_WIDTH);
+        })();
         drawText(v('hope_car_num_2'), 235, 495, 12);
         // 下4桁（hope_car_num_3）は右詰め
         (function () {
@@ -650,9 +656,15 @@
             drawText(hope4, startX, 495, 12, BOX_WIDTH);
         })();
 
-        // 3. 車両番号 
+        // 3. 車両番号：分類3桁・下4桁は右詰
         drawText(v('car_num_1'), 40, 445, 12, 32); 
-        drawText(v('car_num_2'), 170, 445, 12, BOX_WIDTH);
+        (function () {
+            const car3 = v('car_num_2');
+            if (!car3) return;
+            const fieldRight = 170 + 3 * BOX_WIDTH;
+            const startX = fieldRight - String(car3).length * BOX_WIDTH;
+            drawText(car3, startX, 445, 12, BOX_WIDTH);
+        })();
         drawText(v('car_num_3'), 235, 445, 12);
         // 下4桁（car_num_4）は右詰め
         (function () {

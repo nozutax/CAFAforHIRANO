@@ -212,7 +212,7 @@
             <label>1 車両番号 (ナンバープレート)</label>
             <div class="row" style="justify-content: flex-start; gap: 5px; margin-bottom: 0;">
                 <input type="text" id="car_num_1" placeholder="品川" style="width: 6.5em; text-align: center;">
-                <input type="text" id="car_num_2" placeholder="580" style="width: 5em; text-align: center;">
+                <input type="text" id="car_num_2" placeholder="580" style="width: 5em; text-align: right;">
                 <input type="text" id="car_num_3" placeholder="あ" style="width: 3em; text-align: center;">
                 <input type="text" id="car_num_4" maxlength="4" placeholder="1234" style="width: 6.5em; text-align: center;">
             </div>
@@ -509,10 +509,15 @@
         const Y_OCR = 483; // OCR行の高さ
         const BOX_W = 17.2;  // マスの幅(軽自動車様式は少し広い場合があります)
 
-        // 1 車両番号
-        // 左側の余白やマスのピッチを調整してください
+        // 1 車両番号：分類3桁・下4桁は右詰
         drawText(v('car_num_1'), 45,  Y_OCR, 12, 30);     // 地域(品川) ※マスがない場合が多いのでベタ打ち
-        drawText(v('car_num_2'), 170, Y_OCR, 12, BOX_W); // 580 (マスあり)
+        (function () {
+            const car3 = v('car_num_2');
+            if (!car3) return;
+            const fieldRight = 170 + 3 * BOX_W;
+            const startX = fieldRight - String(car3).length * BOX_W;
+            drawText(car3, startX, Y_OCR, 12, BOX_W);
+        })();
         drawText(v('car_num_3'), 233, Y_OCR, 12);        // あ (マスあり)
         // 下4桁（car_num_4）は右詰め
         (function () {

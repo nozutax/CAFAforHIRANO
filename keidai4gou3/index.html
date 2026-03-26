@@ -242,7 +242,7 @@
                 <label>①車両番号 (ナンバープレート)</label>
                 <div class="multi-input" style="justify-content: flex-start; gap: 5px;">
                     <input type="text" id="car_no_1" placeholder="練馬" style="width: 6.5em; text-align: center;">
-                    <input type="text" id="car_no_2" placeholder="580" class="ocr" style="width: 5em; text-align: center;">
+                    <input type="text" id="car_no_2" placeholder="580" class="ocr" style="width: 5em; text-align: right;">
                     <input type="text" id="car_no_3" placeholder="あ" style="width: 3em; text-align: center;">
                     <input type="text" id="car_no_4" placeholder="1234" class="ocr" style="width: 6.5em; text-align: center;">
                 </div>
@@ -696,9 +696,15 @@
 
         // 2. 車両情報 (1車両番号, 3車台番号)
         const Y_CAR = 489;
-        // ①車両番号
+        // ①車両番号：分類3桁・下4桁は右詰
         draw(v('car_no_1'), 256, Y_CAR, 12,31);          // 漢字(練馬)
-        draw(v('car_no_2'), 387, Y_CAR, 12, OCR_W);   // 580
+        (function () {
+            const car3 = v('car_no_2');
+            if (!car3) return;
+            const fieldRight = 387 + 3 * OCR_W;
+            const startX = fieldRight - String(car3).length * OCR_W;
+            draw(car3, startX, Y_CAR, 12, OCR_W);
+        })();
         draw(v('car_no_3'), 448, Y_CAR, 12);          // あ
         // 下4桁（car_no_4）は右詰め
         (function () {

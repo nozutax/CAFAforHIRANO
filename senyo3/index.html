@@ -216,7 +216,7 @@
             <label>車両番号</label>
             <div class="row" style="justify-content: flex-start; gap: 5px;">
                 <input type="text" id="car_num_1" placeholder="地域名" style="width: 6.5em; text-align: center;">
-                <input type="text" id="car_num_2" placeholder="123" style="width: 5em; text-align: center;">
+                <input type="text" id="car_num_2" placeholder="123" style="width: 5em; text-align: right;">
                 <input type="text" id="car_num_3" placeholder="あ" style="width: 3em; text-align: center;">
                 <input type="text" id="car_num_4" maxlength="4" placeholder="1234" style="width: 6.5em; text-align: center;">
             </div>
@@ -239,7 +239,7 @@
         <div class="section-divider"></div>
         <h2>2. 申請者（使用者）・受検者情報</h2>
         <div class="form-group">
-            <label>申請者（使用者）氏名又は名称</label>
+            <label>申請者 氏名又は名称</label>
             <input type="text" id="applicant_name" placeholder="山田 太郎">
         </div>
         <div class="form-group">
@@ -505,7 +505,13 @@
 
         drawText(v('validity'), 265, ROW_1_Y, BOX_SIZE);             
         drawText(v('car_num_1'), 45, ROW_2_Y, 12, 33); 
-        drawText(v('car_num_2'), 173, ROW_2_Y, 12, BOX_WIDTH);
+        (function () {
+            const car3 = v('car_num_2');
+            if (!car3) return;
+            const fieldRight = 173 + 3 * BOX_WIDTH;
+            const startX = fieldRight - String(car3).length * BOX_WIDTH;
+            drawText(car3, startX, ROW_2_Y, 12, BOX_WIDTH);
+        })();
         drawText(v('car_num_3'), 240, ROW_2_Y, 12);
         // 下4桁（car_num_4）は右詰め
         (function () {

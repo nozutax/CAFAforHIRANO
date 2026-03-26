@@ -225,7 +225,7 @@
             <label>車両番号</label>
             <div class="row" style="justify-content: flex-start; gap: 5px;">
                 <input type="text" id="car_num_1" placeholder="地域名" style="width: 6.5em; text-align: center;">
-                <input type="text" id="car_num_2" placeholder="123" style="width: 5em; text-align: center;">
+                <input type="text" id="car_num_2" placeholder="123" style="width: 5em; text-align: right;">
                 <input type="text" id="car_num_3" placeholder="あ" style="width: 3em; text-align: center;">
                 <input type="text" id="car_num_4" placeholder="1234" style="width: 6.5em; text-align: center;">
                 <input type="text" id="car_num_5" placeholder="小板" style="width: 3em; text-align: center;">
@@ -553,10 +553,16 @@
         // 1. 上部マス目項目
         drawText(v('presentation'), 180, 535, 12);
 
-        // 2. 車両番号
+        // 2. 車両番号：分類3桁・下4桁は右詰
         const BOX_WIDTH = 17; 
         drawText(v('car_num_1'), 40, 485, 12, 30); 
-        drawText(v('car_num_2'), 170, 485, 12, BOX_WIDTH);
+        (function () {
+            const car3 = v('car_num_2');
+            if (!car3) return;
+            const fieldRight = 170 + 3 * BOX_WIDTH;
+            const startX = fieldRight - String(car3).length * BOX_WIDTH;
+            drawText(car3, startX, 485, 12, BOX_WIDTH);
+        })();
         drawText(v('car_num_3'), 240, 485, 12);
         // 下4桁（car_num_4）は右詰め
         (function () {

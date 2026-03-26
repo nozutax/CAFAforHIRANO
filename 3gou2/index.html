@@ -267,7 +267,7 @@
             <label>㉑自動車登録番号 (ナンバープレート)</label>
             <div class="row" style="gap: 5px;">
                 <div><input type="text" id="car_area" placeholder="品川" style="width: 6.5em; text-align: center;"></div>
-                <div><input type="text" id="car_class" placeholder="300" class="ocr-input" style="width: 5em; text-align: center;"></div>
+                <div><input type="text" id="car_class" placeholder="300" class="ocr-input" style="width: 5em; text-align: right;"></div>
                 <div><input type="text" id="car_hiragana" placeholder="あ" style="width: 3em; text-align: center;"></div>
                 <div><input type="text" id="car_no" placeholder="1234" class="ocr-input" style="width: 6.5em; text-align: center;"></div>
             </div>
@@ -617,9 +617,15 @@
         draw(v('code_seigen'), 433, Y_OCR_TOP, 14, OCR_W);
 
         // --- 2. 車両情報 ---
-        // ㉑自動車登録番号
+        // ㉑自動車登録番号：分類3桁・下4桁は右詰
         draw(v('car_area'), 52, Y_CAR_INFO, 14,30); // 品川
-        draw(v('car_class'), 177, Y_CAR_INFO, 14, OCR_W); // 300
+        (function () {
+            const carClass = v('car_class');
+            if (!carClass) return;
+            const fieldRight = 177 + 3 * OCR_W;
+            const startX = fieldRight - String(carClass).length * OCR_W;
+            draw(carClass, startX, Y_CAR_INFO, 14, OCR_W);
+        })();
         draw(v('car_hiragana'), 244, Y_CAR_INFO, 14); // あ
         // 下4桁（car_no）は右詰め
         (function () {

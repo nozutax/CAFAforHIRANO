@@ -286,7 +286,7 @@
             <div class="row" style="align-items: flex-end;">
                 <div class="col" style="flex: 0 0 100px;">
                     <label class="hint" style="margin-bottom:4px;">3桁</label>
-                    <input type="text" id="hope_no_1" maxlength="3" placeholder="583">
+                    <input type="text" id="hope_no_1" maxlength="3" placeholder="583" style="text-align: right;">
                 </div>
                 <div class="col" style="flex: 0 0 60px;">
                     <label class="hint" style="margin-bottom:4px;">ひらがな</label>
@@ -304,7 +304,7 @@
             <label>①車両番号（現在のナンバー）</label>
             <div class="row" style="justify-content: flex-start; gap: 5px;">
                 <input type="text" id="car_no_1" placeholder="練馬" style="width: 6.5em; text-align: center;">
-                <input type="text" id="car_no_2" placeholder="580" style="width: 5em; text-align: center;">
+                <input type="text" id="car_no_2" placeholder="580" style="width: 5em; text-align: right;">
                 <input type="text" id="car_no_3" placeholder="あ" style="width: 3em; text-align: center;">
                 <input type="text" id="car_no_4" maxlength="4" placeholder="1234" style="width: 6.5em; text-align: center;">
             </div>
@@ -733,11 +733,17 @@
         draw(v('code_55_hyo_2'), 516, Y_HEADER, SZ_NUM, OCR_W);   // 55標板２
 
         // -----------------------------------------------------------
-        // 2. 希望番号 (②の行)
+        // 2. 希望番号 (②の行)：上3桁・下4桁は右詰
         // -----------------------------------------------------------
         const Y_HOPE = 495;
 
-        draw(v('hope_no_1'), 170, Y_HOPE, SZ_NUM, OCR_W);      // 3桁
+        (function () {
+            const hope3 = v('hope_no_1');
+            if (!hope3) return;
+            const fieldRight = 170 + 3 * OCR_W;
+            const startX = fieldRight - String(hope3).length * OCR_W;
+            draw(hope3, startX, Y_HOPE, SZ_NUM, OCR_W);
+        })();
         draw(v('hope_no_2'), 236, Y_HOPE, SZ_TXT);             // ひらがな
         // 4桁（hope_no_3）は右詰め
         (function () {
@@ -754,9 +760,15 @@
         // -----------------------------------------------------------
         const Y_CAR = 451;
 
-        // ①車両番号
+        // ①車両番号：分類3桁・下4桁は右詰
         draw(v('car_no_1'), 45,  Y_CAR, SZ_TXT, 28);           // 練馬(漢字)
-        draw(v('car_no_2'), 170, Y_CAR, SZ_NUM, OCR_W);        // 580
+        (function () {
+            const car3 = v('car_no_2');
+            if (!car3) return;
+            const fieldRight = 170 + 3 * OCR_W;
+            const startX = fieldRight - String(car3).length * OCR_W;
+            draw(car3, startX, Y_CAR, SZ_NUM, OCR_W);
+        })();
         draw(v('car_no_3'), 236, Y_CAR, SZ_TXT);               // ひらがな
         // 4桁（car_no_4）は右詰め
         (function () {
