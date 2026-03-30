@@ -346,7 +346,7 @@
                 </div>
                 <div class="col">
                     <label class="hint" style="margin-bottom:4px;">丁目</label>
-                    <input type="text" id="owner_chome" placeholder="丁目">
+                    <input type="text" id="owner_chome" placeholder="丁目" style="text-align: right;">
                 </div>
                 <div class="col">
                     <label class="hint" style="margin-bottom:4px;">番地</label>
@@ -375,7 +375,7 @@
                 </div>
                 <div class="col">
                     <label class="hint" style="margin-bottom:4px;">丁目</label>
-                    <input type="text" id="user_chome" placeholder="丁目">
+                    <input type="text" id="user_chome" placeholder="丁目" style="text-align: right;">
                 </div>
                 <div class="col">
                     <label class="hint" style="margin-bottom:4px;">番地</label>
@@ -397,7 +397,7 @@
                 </div>
                 <div class="col">
                     <label class="hint" style="margin-bottom:4px;">丁目</label>
-                    <input type="text" id="base_chome" placeholder="丁目">
+                    <input type="text" id="base_chome" placeholder="丁目" style="text-align: right;">
                 </div>
                 <div class="col">
                     <label class="hint" style="margin-bottom:4px;">番地</label>
@@ -748,7 +748,15 @@
         // ==========================================
         
         // OCRシートのマスの幅（約17〜18ポイント）
-        const BOX_W = 17.1; 
+        const BOX_W = 17.1;
+        // 住所3マス：丁目欄の右端（番地欄の開始Xに合わせる）
+        const CHOME_FIELD_RIGHT = 337;
+        const drawChomeRight = (text, y) => {
+            const ch = v(text);
+            if (!ch) return;
+            const startX = CHOME_FIELD_RIGHT - String(ch).length * BOX_W;
+            drawText(ch, startX, y, 14, BOX_W);
+        };
         
         // 行の高さ（Y座標）の基準
         // PDF-Libは左下が(0,0)です。A4横向き想定か縦向きかで大きく変わります。
@@ -826,7 +834,7 @@
         drawText(v('owner_name'), 96, Y_OWNER+2,14, 31);
         drawText(v('owner_code'), 727, Y_OWNER +2, 14, BOX_W);
         drawText(v('owner_address_code'), 89.5, Y_OWNER - 32,14, BOX_W);
-        drawText(v('owner_chome'), 299, Y_OWNER - 32, 14,BOX_W);
+        drawChomeRight('owner_chome', Y_OWNER - 32);
         drawText(v('owner_banchi'), 342, Y_OWNER - 32, 14,BOX_W);
 
         // 使用者欄（氏名・住所3マス）※「所有者と同じ」チェック時は「１」を ONE_USER_NAME / ONE_USER_ADDR の位置に出力
@@ -842,7 +850,7 @@
             drawText('１', 44, Y_USER - 43, 11);
         } else {
             drawText(v('user_address_code'), 89.5, Y_USER - 43, 14,BOX_W);
-            drawText(v('user_chome'), 299, Y_USER - 43, 14, BOX_W);
+            drawChomeRight('user_chome', Y_USER - 43);
             drawText(v('user_banchi'), 342, Y_USER - 43, 14, BOX_W);
         }
 
@@ -853,7 +861,7 @@
             drawText('１', 44, Y_BASE, 11);
         } else {
             drawText(v('base_address_code'), 89.5, Y_BASE,14, BOX_W);
-            drawText(v('base_chome'), 299, Y_BASE,14, BOX_W);
+            drawChomeRight('base_chome', Y_BASE);
             drawText(v('base_banchi'), 342, Y_BASE,14, BOX_W);
         }
 
