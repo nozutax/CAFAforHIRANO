@@ -1,5 +1,5 @@
 /**
- * CAFAforHIRANO - Apps Script Web App entry.
+ * CAFA - Apps Script Web App entry.
  *
  * Routing model:
  *   /exec?page=portal
@@ -8,8 +8,14 @@
  *   ...
  */
 
+/** ブラウザタブ・全ページ共通タイトル（テナント名・for は含めない） */
+const APP_TITLE_FIXED = '自動車申請書 作成ポータル';
+
+/** スクリプトプロパティ CAFA_TENANT_DISPLAY_NAME 未設定時のサイドバー表示名 */
+const TENANT_DISPLAY_NAME_DEFAULT = 'Customer';
+
 const APP = {
-  title: '自動車申請書 作成ポータル for HIRANO',
+  title: APP_TITLE_FIXED,
   defaultPage: 'portal',
   pages: {
     portal: { file: 'Portal' },
@@ -56,11 +62,15 @@ const PAGE_HTML_FILE_MAP_DEFAULT = {
  *
  * Recommended: set Script Properties key `CAFA_ASSET_MAP_JSON` with JSON like:
  * {
- *   "1gou": {"templatePdfId":"...","fontTtfId":"..."},
+ *   "_shared": {"fontTtfId":"..."},
+ *   "1gou": {"templatePdfId":"..."},
  *   "shako_zu": {"templatePdfId":"..."}
  * }
+ * フォントは全様式共通のため `_shared.fontTtfId` に1つだけ設定すれば足ります。
+ * 後方互換のため、`_shared.fontTtfId` が空のときは各様式の `fontTtfId` にフォールバックします。
  */
 const ASSET_MAP_DEFAULT = {
+  _shared: { fontTtfId: '' },
   '1gou': { templatePdfId: '', fontTtfId: '' },
   '3gou': { templatePdfId: '', fontTtfId: '' },
   '3gou2': { templatePdfId: '', fontTtfId: '' },
@@ -75,6 +85,22 @@ const ASSET_MAP_DEFAULT = {
   'shako_zu': { templatePdfId: '' },
 };
 
+/**
+ * ポータルサイドバー「○○ 様」および履歴フォルダ接頭辞 `CAFAfor○○` の ○○ 部分。
+ * Script Properties: CAFA_TENANT_DISPLAY_NAME
+ */
+function _getTenantDisplayName() {
+  const raw = PropertiesService.getScriptProperties().getProperty('CAFA_TENANT_DISPLAY_NAME');
+  const s = raw != null ? String(raw).trim() : '';
+  return s || TENANT_DISPLAY_NAME_DEFAULT;
+}
+
+/** Drive フォルダ名用。`CAFAfor` + テナント表示名（記号は `_` に置換）。 */
+function _getHistoryUserFolderPrefix() {
+  const tag = _getTenantDisplayName().replace(/[\\/:*?"<>|]/g, '_').trim();
+  return 'CAFAfor' + (tag || TENANT_DISPLAY_NAME_DEFAULT);
+}
+
 function doGet(e) {
   const page = String((e && e.parameter && e.parameter.page) || APP.defaultPage || 'portal');
   const route = APP.pages[page] || APP.pages[APP.defaultPage];
@@ -85,6 +111,8 @@ function doGet(e) {
 
   const tmpl = HtmlService.createTemplateFromFile(route.file);
   tmpl.APP_TITLE = APP.title;
+  tmpl.TENANT_DISPLAY_NAME = _getTenantDisplayName();
+  tmpl.HISTORY_USER_FOLDER_PREFIX = _getHistoryUserFolderPrefix();
   tmpl.PAGE_ID = page;
 
   return tmpl
@@ -111,13 +139,36 @@ function getUrlFor(page) {
   return base + '?page=' + p;
 }
 
+function _deepMergeAssetMap_(defaults, parsed) {
+  const out = {};
+  const keys = {};
+  Object.keys(defaults).forEach(function (k) {
+    keys[k] = true;
+  });
+  Object.keys(parsed).forEach(function (k) {
+    keys[k] = true;
+  });
+  Object.keys(keys).forEach(function (k) {
+    const def = defaults[k];
+    const over = parsed[k];
+    if (over != null && typeof over === 'object' && !Array.isArray(over) && def != null && typeof def === 'object' && !Array.isArray(def)) {
+      out[k] = Object.assign({}, def, over);
+    } else if (over !== undefined) {
+      out[k] = over;
+    } else if (def !== undefined) {
+      out[k] = def;
+    }
+  });
+  return out;
+}
+
 function _getAssetMap() {
   const props = PropertiesService.getScriptProperties();
   const raw = props.getProperty('CAFA_ASSET_MAP_JSON');
   if (!raw) return ASSET_MAP_DEFAULT;
   try {
     const parsed = JSON.parse(raw);
-    return Object.assign({}, ASSET_MAP_DEFAULT, parsed);
+    return _deepMergeAssetMap_(ASSET_MAP_DEFAULT, parsed);
   } catch (e) {
     throw new Error('Script Properties の `CAFA_ASSET_MAP_JSON` が不正なJSONです。' + (e && e.message ? (' ' + e.message) : ''));
   }
@@ -149,8 +200,25 @@ function getAssetBase64(formId, assetType) {
   const entry = map[fid];
   if (!entry) throw new Error('未対応のformIdです: ' + fid);
 
-  if (at === 'template') return _readDriveFileBase64(entry.templatePdfId);
-  if (at === 'font') return _readDriveFileBase64(entry.fontTtfId);
+  if (at === 'template') {
+    const tid = entry.templatePdfId && String(entry.templatePdfId).trim();
+    if (!tid) {
+      throw new Error('CAFA_ASSET_MAP_JSON に ' + fid + '.templatePdfId（テンプレPDFのDriveファイルID）が未設定です。');
+    }
+    return _readDriveFileBase64(tid);
+  }
+  if (at === 'font') {
+    const shared = map._shared;
+    const sharedId = shared && String(shared.fontTtfId || '').trim();
+    const entryId = entry.fontTtfId && String(entry.fontTtfId).trim();
+    const fontId = sharedId || entryId || '';
+    if (!fontId) {
+      throw new Error(
+        'CAFA_ASSET_MAP_JSON に _shared.fontTtfId（共有フォント）または ' + fid + '.fontTtfId が未設定です。Driveに font.ttf を1つ置き、ファイルIDを _shared に記載してください。'
+      );
+    }
+    return _readDriveFileBase64(fontId);
+  }
   throw new Error('未対応のassetTypeです: ' + at);
 }
 
@@ -266,6 +334,7 @@ function _injectAdapters_(html, formId) {
     "  window.__CAFA_FORM_ID = '" + safeFormId + "';",
     "  window.__CAFA_PORTAL_URL = '" + portalUrl + "';",
     "  window.__CAFA_SERVICE_URL = '" + serviceUrl + "';",
+    "  window.__CAFA_USE_DRIVE_ASSETS = true;",
     "  function b64ToBytes(b64){",
     "    const bin = atob(b64);",
     "    const len = bin.length;",
@@ -294,7 +363,10 @@ function _injectAdapters_(html, formId) {
     "      if(!window.google || !google.script || !google.script.run){ reject(new Error('google.script.run が利用できません')); return; }",
     "      google.script.run.withSuccessHandler(function(b64){",
     "        try{ resolve(b64ToBytes(b64).buffer); } catch(e){ reject(e); }",
-    "      }).withFailureHandler(function(e){ reject(e); }).getAssetBase64(window.__CAFA_FORM_ID, assetType);",
+    "      }).withFailureHandler(function(e){",
+    "        var msg = (e && e.message) ? String(e.message) : String(e);",
+    "        reject(new Error(msg || 'getAssetBase64 が失敗しました'));",
+    "      }).getAssetBase64(window.__CAFA_FORM_ID, assetType);",
     "    });",
     "    assetCache_[assetType] = p;",
     "    return p;",
@@ -307,9 +379,10 @@ function _injectAdapters_(html, formId) {
     "  }",
     "  if(origFetch){",
     "    window.fetch = function(resource, init){",
-    "      const url = (typeof resource === 'string') ? resource : (resource && resource.url ? resource.url : '');",
-    "      const isTemplate = url === 'template.pdf' || /shozaizu-haichizu\\.pdf$/.test(url);",
-    "      const isFont = url === 'font.ttf';",
+    "      const raw = (typeof resource === 'string') ? resource : (resource && resource.url ? resource.url : '');",
+    "      const url = String(raw || '');",
+    "      const isTemplate = url === 'template.pdf' || /shozaizu-haichizu\\.pdf$/i.test(url) || /(?:^|\\/)template\\.pdf$/i.test(url);",
+    "      const isFont = url === 'font.ttf' || url === '../assets/font.ttf' || /(?:^|\\/)assets\\/font\\.ttf$/i.test(url) || /(?:^|\\/)font\\.ttf$/i.test(url);",
     "      const isStaticMap = url && (url.indexOf('/api/staticmap?') === 0 || url.indexOf('api/staticmap?') === 0);",
     "      if(isTemplate || isFont){",
     "        const type = isFont ? 'font' : 'template';",
@@ -493,10 +566,114 @@ function _injectAdapters_(html, formId) {
 // ---------------------------
 
 const HISTORY = {
-  folderName: 'CAFAforHIRANO',
   fileName: 'applicationHistory.json',
   maxRecords: 2000,
 };
+
+/**
+ * 申請履歴 JSON の参照先（Script Properties で上書き）
+ * - CAFA_APPLICATION_HISTORY_FILE_ID :
+ *   - JSON ファイルの Drive ファイル ID（そのファイルを直接読み書き）
+ *   - またはフォルダ ID（フォルダ内の `applicationHistory.json` を読み書き。無ければ空の JSON を新規作成）
+ * - CAFA_HISTORY_PARENT_FOLDER_ID : ユーザー別フォルダ「CAFAfor<テナント表示名> - <email>」を作る親フォルダ ID（未設定時は各ユーザーのマイドライブ直下。テナント名は CAFA_TENANT_DISPLAY_NAME、未設定時は Customer）
+ */
+function _getConfiguredHistoryFile_() {
+  const raw = PropertiesService.getScriptProperties().getProperty('CAFA_APPLICATION_HISTORY_FILE_ID');
+  const id = raw != null ? String(raw).trim() : '';
+  if (!id) return null;
+  try {
+    const f = DriveApp.getFileById(id);
+    if (f.getMimeType() === MimeType.FOLDER) {
+      const folder = DriveApp.getFolderById(id);
+      const it = folder.getFilesByName(HISTORY.fileName);
+      if (it.hasNext()) return it.next();
+      return folder.createFile(HISTORY.fileName, '[]', MimeType.PLAIN_TEXT);
+    }
+    return f;
+  } catch (e) {
+    throw new Error(
+      'Script Properties の CAFA_APPLICATION_HISTORY_FILE_ID が無効か、アクセスできません。申請履歴用の JSON ファイルの ID、またはそのファイルを置いたフォルダの ID を指定してください。'
+    );
+  }
+}
+
+/** Googleドキュメント等でもテキスト化して読む（プレーンJSONファイルは従来どおりBlob） */
+/**
+ * Googleドキュメントは DriveApp#getAs(PLAIN_TEXT) 非対応のため、Drive API v3 の export で取得する。
+ */
+function _readGoogleDocAsPlainText_(fileId) {
+  const id = String(fileId || '').trim();
+  const url =
+    'https://www.googleapis.com/drive/v3/files/' +
+    encodeURIComponent(id) +
+    '/export?mimeType=' +
+    encodeURIComponent('text/plain');
+  const res = UrlFetchApp.fetch(url, {
+    headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken() },
+    muteHttpExceptions: true,
+  });
+  const code = res.getResponseCode();
+  if (code !== 200) {
+    throw new Error(
+      'Googleドキュメントのテキスト取得に失敗しました（HTTP ' + code + '）。Drive にアップロードした .json を履歴用に使うこともできます。'
+    );
+  }
+  return res.getContentText('UTF-8');
+}
+
+function _readHistoryFileAsUtf8_(file) {
+  const mime = String(file.getMimeType() || '');
+  if (mime === MimeType.FOLDER) {
+    throw new Error('履歴先がフォルダです。applicationHistory.json を開くか、ファイル ID を指定してください。');
+  }
+  if (mime === 'application/vnd.google-apps.document') {
+    return _readGoogleDocAsPlainText_(file.getId());
+  }
+  try {
+    return file.getBlob().getDataAsString('utf-8');
+  } catch (e) {
+    throw new Error(
+      '履歴ファイルの内容を読み取れません。Googleドキュメントで作成した場合は .json を Drive にアップロードする方法もあります。'
+    );
+  }
+}
+
+function _normalizeHistoryJsonString_(text) {
+  let s = String(text || '');
+  if (s.charCodeAt(0) === 0xfeff) s = s.slice(1);
+  return s.replace(/^\s+/, '').replace(/\s+$/, '');
+}
+
+function _parseHistoryJsonToArray_(jsonText) {
+  const raw = _normalizeHistoryJsonString_(jsonText);
+  if (!raw) return [];
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (e) {
+    throw new Error('申請履歴のJSONが解析できません（括弧・カンマ・引用符を確認してください）。');
+  }
+  if (Array.isArray(parsed)) return parsed;
+  if (parsed !== null && typeof parsed === 'object') {
+    return [parsed];
+  }
+  throw new Error('申請履歴のJSONは配列 [...] か、1件分のオブジェクト {...} である必要があります。');
+}
+
+function _historyParentFolderIdRaw_() {
+  const raw = PropertiesService.getScriptProperties().getProperty('CAFA_HISTORY_PARENT_FOLDER_ID');
+  return raw != null ? String(raw).trim() : '';
+}
+
+function _getHistoryParentFolder_() {
+  const id = _historyParentFolderIdRaw_();
+  if (!id) return DriveApp.getRootFolder();
+  try {
+    return DriveApp.getFolderById(id);
+  } catch (e) {
+    throw new Error('Script Properties の CAFA_HISTORY_PARENT_FOLDER_ID が無効か、アクセスできません。');
+  }
+}
 
 function _getExecutorEmail() {
   const email = (Session.getEffectiveUser && Session.getEffectiveUser().getEmail && Session.getEffectiveUser().getEmail()) || '';
@@ -508,10 +685,12 @@ function _getExecutorEmail() {
 }
 
 function _getOrCreateUserFolder_() {
-  // Cache folder id in user properties (per executor).
+  // Cache folder id in user properties (per executor). Invalidate when CAFA_HISTORY_PARENT_FOLDER_ID changes.
   const up = PropertiesService.getUserProperties();
+  const rootKey = _historyParentFolderIdRaw_();
   const cachedId = up.getProperty('CAFA_FOLDER_ID');
-  if (cachedId) {
+  const cachedRootKey = up.getProperty('CAFA_HISTORY_ROOT_KEY');
+  if (cachedId && cachedRootKey === rootKey) {
     try {
       return DriveApp.getFolderById(cachedId);
     } catch (e) {
@@ -520,16 +699,20 @@ function _getOrCreateUserFolder_() {
   }
 
   const email = _getExecutorEmail();
-  const root = DriveApp.getRootFolder();
-  const name = HISTORY.folderName + ' - ' + email;
+  const root = _getHistoryParentFolder_();
+  const name = _getHistoryUserFolderPrefix() + ' - ' + email;
 
   const it = root.getFoldersByName(name);
   const folder = it.hasNext() ? it.next() : root.createFolder(name);
   up.setProperty('CAFA_FOLDER_ID', folder.getId());
+  up.setProperty('CAFA_HISTORY_ROOT_KEY', rootKey);
   return folder;
 }
 
 function _getOrCreateHistoryFile_() {
+  const configured = _getConfiguredHistoryFile_();
+  if (configured) return configured;
+
   const folder = _getOrCreateUserFolder_();
   const it = folder.getFilesByName(HISTORY.fileName);
   if (it.hasNext()) return it.next();
@@ -538,13 +721,8 @@ function _getOrCreateHistoryFile_() {
 
 function _readHistoryArray_() {
   const file = _getOrCreateHistoryFile_();
-  const text = file.getBlob().getDataAsString('utf-8') || '[]';
-  try {
-    const parsed = JSON.parse(text);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (e) {
-    return [];
-  }
+  const text = _readHistoryFileAsUtf8_(file);
+  return _parseHistoryJsonToArray_(text);
 }
 
 function _writeHistoryArray_(arr) {
@@ -553,14 +731,32 @@ function _writeHistoryArray_(arr) {
   file.setContent(out);
 }
 
-function _getOrCreatePdfFolder_() {
-  const folder = _getOrCreateUserFolder_();
-  const it = folder.getFoldersByName('PDF');
-  return it.hasNext() ? it.next() : folder.createFolder('PDF');
+/**
+ * PDF 保存先フォルダ ID。
+ * - CAFA_PDF_OUTPUT_FOLDER_ID が空でなければ優先
+ * - さもなくば CAFA_PDF_OUTPUT_FOLDER_ID_DEFAULT（いずれか必須）
+ */
+function _resolvePdfOutputFolderId_() {
+  const sp = PropertiesService.getScriptProperties();
+  const primary = sp.getProperty('CAFA_PDF_OUTPUT_FOLDER_ID');
+  if (primary != null && String(primary).trim() !== '') {
+    return String(primary).trim();
+  }
+  const fallback = sp.getProperty('CAFA_PDF_OUTPUT_FOLDER_ID_DEFAULT');
+  if (fallback != null && String(fallback).trim() !== '') {
+    return String(fallback).trim();
+  }
+  throw new Error(
+    'PDF保存先フォルダIDが未設定です。スクリプトプロパティに CAFA_PDF_OUTPUT_FOLDER_ID または CAFA_PDF_OUTPUT_FOLDER_ID_DEFAULT を設定してください。'
+  );
+}
+
+function _getPdfSaveFolder_() {
+  return DriveApp.getFolderById(_resolvePdfOutputFolderId_());
 }
 
 /**
- * Save generated PDF to user's Google Drive.
+ * Save generated PDF to Google Drive（指定フォルダへ保存）。
  * @param {{formId?:string, fileName:string, pdfBase64:string}} payload
  * @returns {{ok:boolean, fileId:string, fileUrl:string}}
  */
@@ -572,7 +768,7 @@ function savePdfToDrive(payload) {
 
   const bytes = Utilities.base64Decode(b64);
   const blob = Utilities.newBlob(bytes, MimeType.PDF, fileName);
-  const folder = _getOrCreatePdfFolder_();
+  const folder = _getPdfSaveFolder_();
   const file = folder.createFile(blob);
   return { ok: true, fileId: file.getId(), fileUrl: file.getUrl() };
 }
@@ -604,6 +800,32 @@ function saveHistory(record) {
  */
 function listHistory() {
   return _readHistoryArray_();
+}
+
+/**
+ * ポータル用: 履歴の読み込み経路が意図どおりか確認する（ファイルID全体は返さない）。
+ * @returns {{configured:boolean, idSuffix:string, mode:string, recordCount:number, readError:string|null}}
+ */
+function getHistoryDiagnostics() {
+  const raw = PropertiesService.getScriptProperties().getProperty('CAFA_APPLICATION_HISTORY_FILE_ID');
+  const idTrim = raw != null ? String(raw).trim() : '';
+  const configured = idTrim.length > 0;
+  const idSuffix = idTrim.length >= 8 ? idTrim.slice(-8) : idTrim;
+  const mode = configured ? 'shared_file' : 'per_user_folder';
+  let recordCount = 0;
+  let readError = null;
+  try {
+    recordCount = _readHistoryArray_().length;
+  } catch (e) {
+    readError = e && e.message ? String(e.message) : String(e);
+  }
+  return {
+    configured: configured,
+    idSuffix: idSuffix,
+    mode: mode,
+    recordCount: recordCount,
+    readError: readError,
+  };
 }
 
 /**

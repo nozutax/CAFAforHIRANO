@@ -20,7 +20,11 @@
         label { display: block; font-weight: bold; font-size: 13px; color: #555; margin-bottom: 5px; }
         .hint { font-size: 11px; color: #888; margin-top: 2px; margin-bottom: 0; line-height: 1.2; }
 
-        input[type="text"], select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 15px; }
+        input[type="text"], select, textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 15px; }
+        textarea { min-height: 88px; resize: vertical; line-height: 1.5; }
+        .reason-header { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 20px; margin-bottom: 8px; }
+        .reason-header > label:first-child { margin-bottom: 0; }
+        .reason-header .checkbox-label { display: inline-flex; align-items: center; gap: 6px; font-weight: normal; cursor: pointer; margin-bottom: 0; }
         input[type="text"], input[type="text"].ocr { background-color: #fff; border-color: #ccc; }
         input[type="text"].ocr { font-family: monospace; letter-spacing: 2px; text-align: center; }
         
@@ -221,14 +225,14 @@
         <h2>5. その他</h2>
         <div class="form-section">
             <div class="form-group">
-                <div class="row" style="align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 8px;">
-                    <label style="margin-bottom: 0;">申請又は請求の理由</label>
-                    <label class="checkbox-label" style="font-weight: normal;">
-                        <input type="checkbox" id="reason_loss_template" aria-label="紛失の理由等の定型文を入力">
+                <div class="reason-header">
+                    <label for="reason_text">申請又は請求の理由</label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="reason_loss_check">
                         紛失の理由等
                     </label>
                 </div>
-                <input type="text" id="reason_text" placeholder="申請又は請求の理由を入力">
+                <textarea id="reason_text" rows="4" placeholder="申請又は請求の理由を入力"></textarea>
             </div>
         </div>
 
@@ -253,22 +257,24 @@
 
     const DOCUMENT_NAME = '第3号様式';
     const HISTORY_KEY = 'applicationHistory';
-    const REASON_LOSS_TEMPLATE = '車検を受けようと思って車内を探しましたが、どうしても見つかりませんでした。紛失した車検証を発見した場合には、速やかに返納いたします。';
+    const LOSS_REASON_BOILERPLATE = '車検を受けようと思って車内を探しましたが、どうしても見つかりませんでした。紛失した車検証を発見した場合には、速やかに返納いたします。';
+    /** PDF1行目の最大文字数（38文字以上ならこの直前で改行し2段にする） */
+    const REASON_LINE1_MAX = 37;
     const v = (id) => document.getElementById(id).value;
+    let lastConfirmSnapshot = null;
 
-    (function initReasonLossCheckbox() {
-        const cb = document.getElementById('reason_loss_template');
-        const reason = document.getElementById('reason_text');
-        if (!cb || !reason) return;
+    document.addEventListener('DOMContentLoaded', () => {
+        const cb = document.getElementById('reason_loss_check');
+        const ta = document.getElementById('reason_text');
+        if (!cb || !ta) return;
         cb.addEventListener('change', () => {
             if (cb.checked) {
-                reason.value = REASON_LOSS_TEMPLATE;
-            } else if (reason.value === REASON_LOSS_TEMPLATE) {
-                reason.value = '';
+                ta.value = LOSS_REASON_BOILERPLATE;
+            } else if (ta.value === LOSS_REASON_BOILERPLATE) {
+                ta.value = '';
             }
         });
-    })();
-    let lastConfirmSnapshot = null;
+    });
 
     function copyVal(src, dest) {
         document.getElementById(dest).value = document.getElementById(src).value;
@@ -453,14 +459,14 @@
         let pdfBytes, fontBytes;
         try {
             const pdfUrl = 'template.pdf';
-            const fontUrl = 'font.ttf';
+            const fontUrl = (window.__CAFA_USE_DRIVE_ASSETS === true) ? 'font.ttf' : '../assets/font.ttf';
             const [pdfRes, fontRes] = await Promise.all([fetch(pdfUrl), fetch(fontUrl)]);
             if (!pdfRes.ok) throw new Error('template.pdf を読み込めません。');
-            if (!fontRes.ok) throw new Error('font.ttf を読み込めません。');
+            if (!fontRes.ok) throw new Error('フォント（font.ttf / assets）を読み込めません。');
             pdfBytes = await pdfRes.arrayBuffer();
             fontBytes = await fontRes.arrayBuffer();
         } catch (e) {
-            alert("PDFを作成できません。\n" + (e.message || e) + "\n\n3gou フォルダに template.pdf と font.ttf を置いてください。");
+            alert("PDFを作成できません。\n" + (e.message || e) + "\n\nローカル: template.pdf は 3gou フォルダ、フォントは assets/font.ttf。GAS: CAFA_ASSET_MAP_JSON を確認してください。");
             return;
         }
 
@@ -579,30 +585,20 @@
         y -= LINE_H;
         draw(v('app_user_addr'), X_TEXT, y, 10);
 
-        // --- ５．その他：申請又は請求の理由 ---
-        // 38文字以上は38文字目の手前（1行目最大37文字）で2段。最終行を Y_REASON_BOTTOM に合わせる
-        const X_REASON = X_TEXT + 300;
-        const Y_REASON_BOTTOM = 160;
-        const REASON_LINE_STEP = 13;
-        const REASON_WRAP_THRESHOLD = 38;
-        const REASON_FIRST_LINE_LEN = 37; // 閾値38の「その前」＝1行目は37文字まで（1行目を38文字にしたい場合は 38 / slice(38) に変更）
-        (function drawReasonBlock() {
-            const raw = v('reason_text');
-            if (!raw) return;
-            const s = String(raw).replace(/\r?\n/g, '');
-            if (!s) return;
-            let toDraw;
-            if (s.length < REASON_WRAP_THRESHOLD) {
-                toDraw = [s];
+        // --- ５．その他：申請又は請求の理由（38文字以上は37文字で改行して2段）
+        // 2行目は従来1行のときと同じ Y に置き、1行目だけその直上（LINE_H は広すぎて欄外に落ちるため使わない）
+        const Y_REASON = 160;
+        const REASON_LINE_STEP = 11;
+        const reasonStr = String(v('reason_text') || '').trim();
+        if (reasonStr) {
+            const xR = X_TEXT + 300;
+            if (reasonStr.length >= 38) {
+                draw(reasonStr.slice(0, REASON_LINE1_MAX), xR, Y_REASON + REASON_LINE_STEP, 10);
+                draw(reasonStr.slice(REASON_LINE1_MAX), xR, Y_REASON, 10);
             } else {
-                toDraw = [s.slice(0, REASON_FIRST_LINE_LEN), s.slice(REASON_FIRST_LINE_LEN)];
+                draw(reasonStr, xR, Y_REASON, 10);
             }
-            const n = toDraw.length;
-            for (let i = 0; i < n; i++) {
-                const yy = Y_REASON_BOTTOM + (n - 1 - i) * REASON_LINE_STEP;
-                draw(toDraw[i], X_REASON, yy, 10);
-            }
-        })();
+        }
 
 
         // ファイル保存・ダウンロード（ファイル名: ダウンロード日付_申請人名_第3号様式.pdf）

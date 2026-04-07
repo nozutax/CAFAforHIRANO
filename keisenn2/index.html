@@ -511,14 +511,15 @@
         
         try {
             const pdfUrl = 'template.pdf';
-            const fontUrl = 'font.ttf';
+            const fontUrl = (window.__CAFA_USE_DRIVE_ASSETS === true) ? 'font.ttf' : '../assets/font.ttf';
             
             [pdfBytes, fontBytes] = await Promise.all([
                 fetch(pdfUrl).then(res => res.arrayBuffer()),
                 fetch(fontUrl).then(res => res.arrayBuffer())
             ]);
         } catch (e) {
-            alert("ファイルの読み込みに失敗しました。template.pdf と font.ttf が同じフォルダにあるか確認してください。");
+            const detail = (e && e.message) ? ('\n\n' + e.message) : '';
+            alert("ファイルの読み込みに失敗しました。template.pdf / フォントを確認してください。" + detail);
             return;
         }
 

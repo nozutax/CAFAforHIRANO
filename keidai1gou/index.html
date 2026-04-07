@@ -671,13 +671,14 @@
         try {
             // 軽第1号様式のPDFファイル
             const pdfUrl = 'template.pdf'; 
-            const fontUrl = 'font.ttf'; 
+            const fontUrl = (window.__CAFA_USE_DRIVE_ASSETS === true) ? 'font.ttf' : '../assets/font.ttf'; 
             [pdfBytes, fontBytes] = await Promise.all([
                 fetch(pdfUrl).then(res => res.arrayBuffer()),
                 fetch(fontUrl).then(res => res.arrayBuffer())
             ]);
         } catch (e) {
-            alert("template.pdf または font.ttf が見つかりません。");
+            const detail = (e && e.message) ? ('\n\n' + e.message) : '';
+            alert("template.pdf またはフォントの取得に失敗しました。" + detail);
             return;
         }
 
