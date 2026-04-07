@@ -221,7 +221,13 @@
         <h2>5. その他</h2>
         <div class="form-section">
             <div class="form-group">
-                <label>申請又は請求の理由</label>
+                <div class="row" style="align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 8px;">
+                    <label style="margin-bottom: 0;">申請又は請求の理由</label>
+                    <label class="checkbox-label" style="font-weight: normal;">
+                        <input type="checkbox" id="reason_loss_template" aria-label="紛失の理由等の定型文を入力">
+                        紛失の理由等
+                    </label>
+                </div>
                 <input type="text" id="reason_text" placeholder="申請又は請求の理由を入力">
             </div>
         </div>
@@ -247,7 +253,21 @@
 
     const DOCUMENT_NAME = '第3号様式';
     const HISTORY_KEY = 'applicationHistory';
+    const REASON_LOSS_TEMPLATE = '車検を受けようと思って車内を探しましたが、どうしても見つかりませんでした。紛失した車検証を発見した場合には、速やかに返納いたします。';
     const v = (id) => document.getElementById(id).value;
+
+    (function initReasonLossCheckbox() {
+        const cb = document.getElementById('reason_loss_template');
+        const reason = document.getElementById('reason_text');
+        if (!cb || !reason) return;
+        cb.addEventListener('change', () => {
+            if (cb.checked) {
+                reason.value = REASON_LOSS_TEMPLATE;
+            } else if (reason.value === REASON_LOSS_TEMPLATE) {
+                reason.value = '';
+            }
+        });
+    })();
     let lastConfirmSnapshot = null;
 
     function copyVal(src, dest) {
@@ -560,8 +580,29 @@
         draw(v('app_user_addr'), X_TEXT, y, 10);
 
         // --- ５．その他：申請又は請求の理由 ---
-        const Y_REASON = 160;
-        draw(v('reason_text'), X_TEXT+300, Y_REASON, 10);
+        // 38文字以上は38文字目の手前（1行目最大37文字）で2段。最終行を Y_REASON_BOTTOM に合わせる
+        const X_REASON = X_TEXT + 300;
+        const Y_REASON_BOTTOM = 160;
+        const REASON_LINE_STEP = 13;
+        const REASON_WRAP_THRESHOLD = 38;
+        const REASON_FIRST_LINE_LEN = 37; // 閾値38の「その前」＝1行目は37文字まで（1行目を38文字にしたい場合は 38 / slice(38) に変更）
+        (function drawReasonBlock() {
+            const raw = v('reason_text');
+            if (!raw) return;
+            const s = String(raw).replace(/\r?\n/g, '');
+            if (!s) return;
+            let toDraw;
+            if (s.length < REASON_WRAP_THRESHOLD) {
+                toDraw = [s];
+            } else {
+                toDraw = [s.slice(0, REASON_FIRST_LINE_LEN), s.slice(REASON_FIRST_LINE_LEN)];
+            }
+            const n = toDraw.length;
+            for (let i = 0; i < n; i++) {
+                const yy = Y_REASON_BOTTOM + (n - 1 - i) * REASON_LINE_STEP;
+                draw(toDraw[i], X_REASON, yy, 10);
+            }
+        })();
 
 
         // ファイル保存・ダウンロード（ファイル名: ダウンロード日付_申請人名_第3号様式.pdf）
