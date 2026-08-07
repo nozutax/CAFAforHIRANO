@@ -330,12 +330,25 @@
 
         <h2>所有者欄</h2>
         <div class="form-group">
-            <label>氏名又は名称</label>
-            <input type="text" id="owner_name" placeholder="山田 太郎">
+            <div class="row" style="align-items: flex-end;">
+                <div class="col" style="flex: 0 0 160px;">
+                    <label class="hint" style="margin-bottom:4px;">1.所有者欄留保の解除</label>
+                    <input type="text" id="owner_retention_release" maxlength="1" placeholder="1桁" pattern="[0-9]*" inputmode="numeric" style="width: 60px; text-align: center;">
+                </div>
+                <div class="col">
+                    <label>氏名又は名称</label>
+                    <input type="text" id="owner_name" placeholder="山田 太郎">
+                </div>
+            </div>
         </div>
         <div class="form-group">
             <label>所有者コード</label>
             <input type="text" id="owner_code" maxlength="5" placeholder="5桁" pattern="[0-9]*" inputmode="numeric" style="width: 120px;">
+        </div>
+        <div class="form-group">
+            <label>127番 登録識別情報</label>
+            <input type="text" id="code_127_reg_id" maxlength="6" placeholder="6桁（半角英数字）" pattern="[A-Za-z0-9]*" style="width: 150px; text-align: center;">
+            <div class="hint">半角英数字6桁</div>
         </div>
         <div class="form-group">
             <label>住所（3つのマス）</label>
@@ -830,10 +843,12 @@
         // ㉒車台番号（下7桁）
         drawText(v('chassis_num'), 350, CAR_Y, 14, BOX_W);
 
-        // 所有者欄（氏名・所有者コード5桁・住所3マス）
+        // 所有者欄（留保の解除1桁・氏名・所有者コード5桁・住所3マス）
         const Y_OWNER = Y_ROW_ADD + 140;
+        drawText(v('owner_retention_release'), 44, Y_OWNER + 2, 14, BOX_W);
         drawText(v('owner_name'), 96, Y_OWNER+2,14, 31);
         drawText(v('owner_code'), 727, Y_OWNER +2, 14, BOX_W);
+        drawText(v('code_127_reg_id'), 727, Y_ROW_ADD +50, 14, BOX_W);
         drawText(v('owner_address_code'), 89.5, Y_OWNER - 32,14, BOX_W);
         drawChomeRight('owner_chome', Y_OWNER - 32);
         drawText(v('owner_banchi'), 342, Y_OWNER - 32, 14,BOX_W);

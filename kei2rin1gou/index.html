@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>軽二輪第1号様式 作成アプリ</title>
+    <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+    <script src="https://unpkg.com/@pdf-lib/fontkit/dist/fontkit.umd.min.js"></script>
+    <style>
+        body {
+            font-family: "Helvetica Neue", Arial, sans-serif;
+            max-width: 950px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        p.subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+        h2 {
+            font-size: 16px;
+            background: #eef5ff;
+            border-left: 5px solid #007BFF;
+            padding: 8px 10px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 5px;
+        }
+        .hint {
+            font-size: 11px;
+            color: #888;
+            margin-top: 2px;
+            margin-bottom: 0;
+            line-height: 1.2;
+        }
+        input[type="text"], select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 15px;
+            background-color: #fff;
+        }
+        input[readonly] {
+            background-color: #f3f4f6;
+            color: #374151;
+        }
+        .row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .col {
+            flex: 1;
+            min-width: 0;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 18px;
+            cursor: pointer;
+            margin-top: 40px;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .label-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .inline-check {
+            font-size: 14px;
+            font-weight: normal;
+            color: #555;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .inline-check input { width: auto; cursor: pointer; }
+
+        .applicant-section { margin-top: 8px; }
+        .applicant-block {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 14px 18px;
+            margin-bottom: 14px;
+        }
+        .applicant-block:last-child { margin-bottom: 0; }
+        .applicant-block .block-title-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 0 0 12px 0;
+        }
+        .applicant-block .block-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #1e3a5f;
+            border-left: 4px solid #007BFF;
+            padding: 6px 0 6px 12px;
+            margin: 0;
+            background: #eef5ff;
+            border-radius: 0 4px 4px 0;
+            flex: 1;
+            min-width: 0;
+        }
+        .applicant-block .block-check {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: #555;
+            white-space: nowrap;
+        }
+        .applicant-block .block-check input { width: auto; margin: 0; cursor: pointer; }
+        .applicant-block .form-group { margin-bottom: 12px; }
+        .applicant-block .form-group:last-child { margin-bottom: 0; }
+        .applicant-block label { font-size: 14px; margin-bottom: 6px; }
+
+        #confirmModal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.35);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        #confirmModal.active { display: flex; }
+        .confirm-dialog {
+            background: #ffffff;
+            max-width: 720px;
+            width: 90%;
+            border-radius: 8px;
+            padding: 24px 28px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+        }
+        .confirm-dialog h2 { margin: 0 0 12px; font-size: 18px; }
+        .confirm-dialog p.lead { margin: 0 0 16px; font-size: 13px; color: #555; }
+        .confirm-body {
+            max-height: 60vh;
+            overflow: auto;
+            font-size: 13px;
+            color: #444;
+            border-top: 1px solid #e5e7eb;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 10px 0;
+            margin-top: 4px;
+        }
+        .confirm-row { margin-bottom: 6px; line-height: 1.6; }
+        .confirm-label {
+            font-weight: bold;
+            display: inline-block;
+            min-width: 140px;
+            color: #374151;
+        }
+        .confirm-value { color: #111827; }
+        .confirm-sep { color: #9ca3af; margin: 0 4px; }
+        .confirm-section {
+            font-weight: bold;
+            font-size: 13px;
+            color: #2563eb;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 4px;
+            margin-top: 12px;
+            margin-bottom: 6px;
+        }
+        .confirm-section:first-child { margin-top: 0; }
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 18px;
+        }
+        .modal-actions button {
+            width: auto;
+            padding: 10px 16px;
+            font-size: 14px;
+            margin-top: 0;
+        }
+        .btn-secondary {
+            background-color: #e5e7eb;
+            color: #111827;
+        }
+        .btn-secondary:hover { background-color: #d1d5db; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>軽二輪第1号様式 申請書作成</h1>
+    <p class="subtitle">軽二輪届出書・軽自動車届出済証記入申請書（OCRシート）への転記用</p>
+
+    <form id="pdfForm">
+
+        <h2>１．基本情報</h2>
+        <div class="form-group">
+            <div class="row" style="align-items: flex-end;">
+                <div class="col" style="flex: 0 0 80px;">
+                    <label class="hint" style="margin-bottom:4px;">①業務種別</label>
+                    <input type="text" id="code_gyomu" maxlength="1" placeholder="8">
+                </div>
+                <div class="col" style="flex: 0 0 80px;">
+                    <label class="hint" style="margin-bottom:4px;">④補助シート</label>
+                    <input type="text" id="code_hojo" maxlength="1" placeholder="">
+                </div>
+                <div class="col" style="flex: 0 0 60px;">
+                    <label class="hint" style="margin-bottom:4px;">⑥番号指示１</label>
+                    <input type="text" id="code_bango_1" maxlength="1" placeholder="1">
+                </div>
+                <div class="col" style="flex: 0 0 60px;">
+                    <label class="hint" style="margin-bottom:4px;">⑥番号指示２</label>
+                    <input type="text" id="code_bango_2" maxlength="1" placeholder="1">
+                </div>
+            </div>
+        </div>
+
+        <h2>２．車両情報</h2>
+        <div class="form-group">
+            <label>㉑車両番号</label>
+            <div class="row" style="justify-content: flex-start; gap: 5px; align-items: flex-end;">
+                <div style="flex: none;">
+                    <label class="hint" style="margin-bottom:4px;">区分</label>
+                    <input type="text" id="car_no_0" maxlength="1" placeholder="1" style="width: 3em; text-align: center;">
+                </div>
+                <div style="flex: none;">
+                    <label class="hint" style="margin-bottom:4px;">陸運支局名</label>
+                    <input type="text" id="car_no_1" maxlength="4" placeholder="富山" style="width: 6.5em; text-align: center;">
+                </div>
+                <div style="flex: none;">
+                    <label class="hint" style="margin-bottom:4px;">かな</label>
+                    <input type="text" id="car_no_2" maxlength="1" placeholder="あ" style="width: 3em; text-align: center;">
+                </div>
+                <div style="flex: none;">
+                    <label class="hint" style="margin-bottom:4px;">番号</label>
+                    <input type="text" id="car_no_3" maxlength="4" placeholder="1234" style="width: 6.5em; text-align: center;">
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>㉒車台番号</label>
+            <input type="text" id="chassis_no" maxlength="30" placeholder="464..." style="width: 28em;">
+        </div>
+
+        <h2>３．所有者欄</h2>
+        <div class="form-group">
+            <label>氏名又は名称</label>
+            <input type="text" id="owner_name" placeholder="山田　太郎">
+        </div>
+        <div class="form-group">
+            <label>住所</label>
+            <div class="row" style="align-items: flex-end; justify-content: flex-start;">
+                <div style="flex: none;">
+                    <label class="hint" style="margin-bottom:4px;">住所コード</label>
+                    <input type="text" id="owner_address_code" maxlength="12" placeholder="165011394" style="width: 14em; text-align: center;">
+                </div>
+                <div style="flex: none;">
+                    <label class="hint" style="margin-bottom:4px;">丁目</label>
+                    <input type="text" id="owner_chome" maxlength="2" inputmode="numeric" placeholder="丁目" style="width: 5em; text-align: right;">
+                </div>
+                <div style="flex: none;">
+                    <label class="hint" style="margin-bottom:4px;">番地等</label>
+                    <input type="text" id="owner_banchi" placeholder="番地" style="width: 10em;">
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>㊵所有者コード</label>
+            <input type="text" id="owner_code" maxlength="5" placeholder="5桁" style="width: 8em;">
+        </div>
+
+        <h2>４．使用者欄</h2>
+        <div class="form-group">
+            <div class="label-row">
+                <label>氏名又は名称</label>
+                <label class="inline-check"><input type="checkbox" id="check_user_same_as_owner"> 所有者と同じ</label>
+            </div>
+            <input type="text" id="user_name" placeholder="山田 太郎">
+            <p class="hint">チェック時、PDF左枠に「１」を出力します（氏名欄は空欄のまま）</p>
+        </div>
+        <div class="form-group">
+            <div class="label-row">
+                <label>住所</label>
+                <label class="inline-check"><input type="checkbox" id="check_user_same_as_owner_addr"> 所有者と同じ</label>
+            </div>
+            <div class="row" style="align-items: flex-end; justify-content: flex-start;">
+                <div style="flex: none;">
+                    <label class="hint" style="margin-bottom:4px;">住所コード</label>
+                    <input type="text" id="user_address_code" maxlength="12" placeholder="165011394" style="width: 14em; text-align: center;">
+                </div>
+                <div style="flex: none;">
+                    <label class="hint" style="margin-bottom:4px;">丁目</label>
+                    <input type="text" id="user_chome" maxlength="2" inputmode="numeric" placeholder="丁目" style="width: 5em; text-align: right;">
+                </div>
+                <div style="flex: none;">
+                    <label class="hint" style="margin-bottom:4px;">番地等</label>
+                    <input type="text" id="user_banchi" placeholder="番地" style="width: 10em;">
+                </div>
+            </div>
+            <p class="hint">チェック時、PDF左枠に「１」を出力します（住所欄は空欄のまま）</p>
+        </div>
+
+        <h2>５．使用の本拠の位置</h2>
+        <div class="form-group">
+            <div class="label-row">
+                <label>住所</label>
+                <label class="inline-check"><input type="checkbox" id="check_base_same_as_user"> 使用者住所と同じ</label>
+            </div>
+            <div class="row" style="align-items: flex-end; justify-content: flex-start;">
+                <div style="flex: none;">
+                    <label class="hint" style="margin-bottom:4px;">住所コード</label>
+                    <input type="text" id="base_address_code" maxlength="12" placeholder="165011394" style="width: 14em; text-align: center;">
+                </div>
+                <div style="flex: none;">
+                    <label class="hint" style="margin-bottom:4px;">丁目</label>
+                    <input type="text" id="base_chome" maxlength="2" inputmode="numeric" placeholder="丁目" style="width: 5em; text-align: right;">
+                </div>
+                <div style="flex: none;">
+                    <label class="hint" style="margin-bottom:4px;">番地等</label>
+                    <input type="text" id="base_banchi" placeholder="番地" style="width: 10em;">
+                </div>
+            </div>
+            <p class="hint">チェック時、PDF左枠に「１」を出力します（住所欄は空欄のまま）</p>
+        </div>
+
+        <h2>６．その他欄</h2>
+        <div class="form-group">
+            <label class="hint" style="margin-bottom:6px;">軽自動車型式認定番号</label>
+            <div class="row" style="align-items: center; gap: 8px;">
+                <input type="text" id="model_cert_1" maxlength="1" placeholder="2" style="width: 40px; text-align: center;">
+                <span style="color:#666;">－</span>
+                <input type="text" id="model_cert_2" maxlength="3" placeholder="123" style="width: 90px; text-align: center;">
+            </div>
+        </div>
+
+        <h2>７．申請人</h2>
+        <div class="applicant-section">
+            <div class="applicant-block">
+                <div class="block-title-row">
+                    <div class="block-title">届出人・申請者（使用者）</div>
+                    <label class="block-check"><input type="checkbox" id="check_same_ininjo_user" onchange="toggleSameIninjo('user')"> 委任状記載事項に同じ</label>
+                </div>
+                <div class="form-group">
+                    <label>氏名又は名称</label>
+                    <input type="text" id="app_user_name" placeholder="山田 太郎">
+                </div>
+                <div class="form-group">
+                    <label>住所</label>
+                    <input type="text" id="app_user_address" placeholder="富山県...">
+                </div>
+            </div>
+
+            <div class="applicant-block">
+                <div class="block-title-row">
+                    <div class="block-title">所有者</div>
+                    <label class="block-check"><input type="checkbox" id="check_same_ininjo_owner" onchange="toggleSameIninjo('owner')"> 委任状記載事項に同じ</label>
+                </div>
+                <div class="form-group">
+                    <label>氏名又は名称</label>
+                    <input type="text" id="app_owner_name" placeholder="山田 太郎">
+                </div>
+                <div class="form-group">
+                    <label>住所</label>
+                    <input type="text" id="app_owner_address" placeholder="富山県...">
+                </div>
+            </div>
+
+            <div class="applicant-block">
+                <div class="block-title-row">
+                    <div class="block-title">旧使用者</div>
+                    <label class="block-check"><input type="checkbox" id="check_same_ininjo_old_user" onchange="toggleSameIninjo('old_user')"> 委任状記載事項に同じ</label>
+                </div>
+                <div class="form-group">
+                    <label>氏名又は名称</label>
+                    <input type="text" id="app_old_user_name" placeholder="山田 太郎">
+                </div>
+                <div class="form-group">
+                    <label>住所</label>
+                    <input type="text" id="app_old_user_address" placeholder="富山県...">
+                </div>
+            </div>
+
+            <div class="applicant-block">
+                <div class="block-title-row">
+                    <div class="block-title">旧所有者</div>
+                    <label class="block-check"><input type="checkbox" id="check_same_ininjo_old_owner" onchange="toggleSameIninjo('old_owner')"> 委任状記載事項に同じ</label>
+                </div>
+                <div class="form-group">
+                    <label>氏名又は名称</label>
+                    <input type="text" id="app_old_owner_name" placeholder="山田 太郎">
+                </div>
+                <div class="form-group">
+                    <label>住所</label>
+                    <input type="text" id="app_old_owner_address" placeholder="富山県...">
+                </div>
+            </div>
+
+            <div class="applicant-block">
+                <div class="block-title-row">
+                    <div class="block-title">使用の本拠の位置</div>
+                    <label class="block-check"><input type="checkbox" id="check_same_user_address_base" onchange="toggleSameUserAddressBase()"> 使用者住所に同じ</label>
+                </div>
+                <div class="form-group">
+                    <label>住所</label>
+                    <input type="text" id="app_user_base_address" placeholder="富山県...">
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>変更の事由</label>
+            <input type="text" id="change_reason" placeholder="売買">
+        </div>
+
+        <button type="button" onclick="openConfirm()">入力内容を確認する</button>
+    </form>
+</div>
+
+<div id="confirmModal">
+    <div class="confirm-dialog">
+        <h2>入力内容の確認</h2>
+        <p class="lead">全ての入力項目・チェックボックスの内容を確認し、「保存」ボタンを押してください。</p>
+        <div class="confirm-body" id="confirmList"></div>
+        <div class="modal-actions">
+            <button type="button" class="btn-secondary" onclick="closeConfirm()">戻って修正する</button>
+            <button type="button" onclick="confirmAndDownload()">保存（PDFダウンロード）</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const { PDFDocument, rgb, degrees } = PDFLib;
+
+    const SAME_ININJO = '委任状記載事項に同じ';
+    const SAME_USER_ADDRESS = '使用者住所に同じ';
+    const DOCUMENT_NAME = '軽二輪第1号様式';
+    const HISTORY_KEY = 'applicationHistory';
+    const v = (id) => document.getElementById(id).value;
+    const isChecked = (id) => document.getElementById(id).checked;
+    let lastConfirmSnapshot = null;
+
+    function toggleSameIninjo(which) {
+        const ids = {
+            user: ['app_user_name', 'app_user_address'],
+            owner: ['app_owner_name', 'app_owner_address'],
+            old_user: ['app_old_user_name', 'app_old_user_address'],
+            old_owner: ['app_old_owner_name', 'app_old_owner_address']
+        };
+        const checkIds = {
+            user: 'check_same_ininjo_user',
+            owner: 'check_same_ininjo_owner',
+            old_user: 'check_same_ininjo_old_user',
+            old_owner: 'check_same_ininjo_old_owner'
+        };
+        const names = ids[which];
+        const chk = document.getElementById(checkIds[which]);
+        const value = chk.checked ? SAME_ININJO : '';
+        names.forEach(id => {
+            const el = document.getElementById(id);
+            el.value = value;
+            el.readOnly = chk.checked;
+        });
+    }
+
+    function toggleSameUserAddressBase() {
+        const chk = document.getElementById('check_same_user_address_base');
+        const el = document.getElementById('app_user_base_address');
+        el.value = chk.checked ? SAME_USER_ADDRESS : '';
+        el.readOnly = chk.checked;
+    }
+
+    function buildConfirmSnapshot(renderToDom = true) {
+        const snapshot = [];
+        const list = document.getElementById('confirmList');
+        if (renderToDom && list) list.innerHTML = '';
+
+        const form = document.getElementById('pdfForm');
+        const elements = form.querySelectorAll('input, select, textarea');
+        const seen = new Set();
+        const groupMap = new Map();
+        const groupSecMap = new Map();
+
+        const sectionMap = new Map();
+        let curSec = '';
+        form.querySelectorAll('h2, .form-group, .applicant-block').forEach(node => {
+            if (node.tagName === 'H2') curSec = node.textContent.trim();
+            else sectionMap.set(node, curSec);
+        });
+
+        const labelOverrides = {
+            'code_gyomu': '業務種別',
+            'code_hojo': '補助シート',
+            'code_bango_1': '番号指示１',
+            'code_bango_2': '番号指示２',
+            'car_no_0': '車両番号（区分）',
+            'car_no_1': '車両番号（支局）',
+            'car_no_2': '車両番号（かな）',
+            'car_no_3': '車両番号（番号）',
+            'model_cert_1': '型式認定番号',
+            'model_cert_2': '型式認定番号',
+        };
+
+        elements.forEach(el => {
+            if (el.type === 'button' || el.type === 'submit') return;
+
+            let labelText = '';
+            const labelByFor = el.id ? form.querySelector(`label[for="${el.id}"]`) : null;
+            const closestLabel = el.closest('label');
+            const group = el.closest('.form-group');
+            const groupLabel = group ? group.querySelector('label') : null;
+            const block = el.closest('.applicant-block');
+            const blockTitle = block ? block.querySelector('.block-title') : null;
+
+            const inlineLabel = el.closest('.inline-check') || el.closest('.block-check');
+            const labelSource = labelByFor || closestLabel || inlineLabel || groupLabel;
+            if (labelSource) {
+                labelText = labelSource.textContent.trim().replace(/\s+/g, ' ');
+            }
+            if (!labelText) {
+                labelText = el.id || el.name || '項目';
+            }
+            if (labelOverrides[el.id]) labelText = labelOverrides[el.id];
+            if (blockTitle && !inlineLabel && (el.id || '').startsWith('app_')) {
+                labelText = blockTitle.textContent.trim() + ' / ' + labelText;
+            }
+
+            const key = `${labelText}|${el.name}|${el.id}`;
+            if (seen.has(key)) return;
+            seen.add(key);
+
+            let valueText = '';
+            if (el.type === 'checkbox' || el.type === 'radio') {
+                if (!el.checked) return;
+                valueText = '✔ チェックあり';
+            } else if (el.tagName === 'SELECT') {
+                const opt = el.options[el.selectedIndex];
+                valueText = (opt && opt.text) ? opt.text : '';
+            } else {
+                valueText = el.value;
+            }
+            if (!valueText) valueText = '（未入力）';
+
+            const isCheck = el.type === 'checkbox' || el.type === 'radio';
+            snapshot.push({ label: labelText, value: valueText });
+
+            const groupKey = group || block || labelOverrides[el.id] || ('_ungrouped_' + snapshot.length);
+            if (!groupMap.has(groupKey)) groupMap.set(groupKey, []);
+            groupMap.get(groupKey).push({ label: labelText, value: valueText, isCheck });
+
+            if (!groupSecMap.has(groupKey)) {
+                let sec = '';
+                if (group) sec = sectionMap.get(group) || '';
+                else if (block) sec = sectionMap.get(block) || '７．申請人';
+                groupSecMap.set(groupKey, sec);
+            }
+        });
+
+        if (renderToDom && list) {
+            let lastSec = '';
+            const renderRow = (part) => {
+                const row = document.createElement('div');
+                row.className = 'confirm-row';
+                const allSameLabel = part.length > 1 && part.every(it => it.label === part[0].label);
+                if (part.length === 1) {
+                    row.innerHTML = `<span class="confirm-label">${part[0].label}</span><span class="confirm-value">${part[0].value}</span>`;
+                } else if (allSameLabel) {
+                    row.innerHTML = `<span class="confirm-label">${part[0].label}</span>` +
+                        part.map(it => `<span class="confirm-value">${it.value}</span>`).join('<span class="confirm-sep">／</span>');
+                } else {
+                    row.innerHTML = part.map(it =>
+                        `<span class="confirm-label">${it.label}</span><span class="confirm-value">${it.value}</span>`
+                    ).join('<span class="confirm-sep">／</span>');
+                }
+                list.appendChild(row);
+            };
+            for (const [groupKey, items] of groupMap) {
+                const sec = groupSecMap.get(groupKey) || '';
+                if (sec && sec !== lastSec) {
+                    const hdr = document.createElement('div');
+                    hdr.className = 'confirm-section';
+                    hdr.textContent = sec;
+                    list.appendChild(hdr);
+                    lastSec = sec;
+                }
+                const checks = items.filter(it => it.isCheck);
+                const others = items.filter(it => !it.isCheck);
+                if (checks.length > 0 && others.length > 0) {
+                    renderRow(checks);
+                    renderRow(others);
+                } else {
+                    renderRow(items);
+                }
+            }
+        }
+
+        return snapshot;
+    }
+
+    function openConfirm() {
+        lastConfirmSnapshot = buildConfirmSnapshot(true);
+        document.getElementById('confirmModal').classList.add('active');
+    }
+
+    function closeConfirm() {
+        document.getElementById('confirmModal').classList.remove('active');
+    }
+
+    async function confirmAndDownload() {
+        try {
+            if (!lastConfirmSnapshot) {
+                lastConfirmSnapshot = buildConfirmSnapshot(false);
+            }
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hour = String(now.getHours()).padStart(2, '0');
+            const minute = String(now.getMinutes()).padStart(2, '0');
+
+            const savedAt = `${year}-${month}-${day} ${hour}:${minute}`;
+            const savedDateKey = `${year}${month}${day}`;
+            const applicantName = v('owner_name') || v('app_user_name') || '';
+
+            const record = {
+                id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+                savedAt,
+                savedDateKey,
+                applicantName,
+                documentName: DOCUMENT_NAME,
+                formSnapshot: lastConfirmSnapshot || []
+            };
+
+            const raw = localStorage.getItem(HISTORY_KEY);
+            let list = [];
+            if (raw) {
+                try {
+                    const parsed = JSON.parse(raw);
+                    if (Array.isArray(parsed)) list = parsed;
+                } catch (e) {
+                    console.warn('履歴JSONの解析に失敗したため、新しく作り直します。', e);
+                }
+            }
+            list.push(record);
+            localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+        } catch (e) {
+            console.error('申請履歴の保存に失敗しました。', e);
+            alert('申請履歴の保存に失敗しましたが、PDFのダウンロードは続行します。');
+        }
+
+        await generatePDF();
+        closeConfirm();
+    }
+
+    async function generatePDF() {
+        let pdfBytes, fontBytes;
+        try {
+            const pdfUrl = 'template.pdf';
+            const fontUrl = (window.__CAFA_USE_DRIVE_ASSETS === true) ? 'font.ttf' : '../assets/font.ttf';
+            [pdfBytes, fontBytes] = await Promise.all([
+                fetch(pdfUrl).then(res => {
+                    if (!res.ok) throw new Error('template.pdf HTTP ' + res.status);
+                    return res.arrayBuffer();
+                }),
+                fetch(fontUrl).then(res => {
+                    if (!res.ok) throw new Error('font HTTP ' + res.status);
+                    return res.arrayBuffer();
+                })
+            ]);
+        } catch (e) {
+            const detail = (e && e.message) ? ('\n\n' + e.message) : '';
+            alert('template.pdf またはフォントの取得に失敗しました。' + detail);
+            return;
+        }
+
+        const pdfDoc = await PDFDocument.load(pdfBytes);
+        pdfDoc.registerFontkit(fontkit);
+        const customFont = await pdfDoc.embedFont(fontBytes);
+        const page = pdfDoc.getPages()[0];
+
+        // template.pdf: MediaBox 595×842 + Rotate 90（横向き）
+        // 正立: rotate +90
+        // 座標: mx = 上端からの距離(縦), my = 左端からの距離(横)
+        // 文字送りは my 増加方向（左→右）
+        const drawText = (mx, my, text, size = 11, pitch = 0) => {
+            if (!text) return;
+            text = String(text);
+            if (pitch > 0) {
+                for (let i = 0; i < text.length; i++) {
+                    page.drawText(text[i], {
+                        x: mx,
+                        y: my + i * pitch,
+                        size,
+                        font: customFont,
+                        color: rgb(0, 0, 0),
+                        rotate: degrees(90)
+                    });
+                }
+            } else {
+                page.drawText(text, {
+                    x: mx,
+                    y: my,
+                    size,
+                    font: customFont,
+                    color: rgb(0, 0, 0),
+                    rotate: degrees(90)
+                });
+            }
+        };
+
+        const OCR_W = 17;
+        const NAME_W = 30.75;
+        const X_ONE = 39;
+        // 丁目は2マス枠。右端は番地欄の開始位置より8pt左（はみ出し補正）
+        const CHOME_FIELD_RIGHT = 343 - 8;
+        const drawChomeRight = (mx, text) => {
+            const ch = String(text || '').replace(/\D/g, '').slice(0, 2);
+            if (!ch) return;
+            const startMy = CHOME_FIELD_RIGHT - ch.length * OCR_W;
+            drawText(mx, startMy, ch, 11, OCR_W);
+        };
+
+        // --- 1. ヘッダー（業務種別・補助シート・番号指示）---
+        drawText(62, 145, v('code_gyomu'), 12);
+        drawText(62, 273, v('code_hojo'), 12);
+        drawText(62, 317, v('code_bango_1'), 12);
+        drawText(62, 370, v('code_bango_2'), 12);
+
+        // --- 2. 車両番号・車台番号 ---
+        drawText(149, 68, v('car_no_0'), 12);
+        drawText(149, 100, v('car_no_1'), 13,NAME_W);
+        drawText(149, 229, v('car_no_2'), 13);
+        (function () {
+            const num = v('car_no_3');
+            if (!num) return;
+            const fieldRight = 338;
+            const startMy = fieldRight - String(num).length * OCR_W;
+            drawText(149, startMy, num, 12, OCR_W);
+        })();
+        drawText(150, 348, v('chassis_no'), 12, OCR_W);
+
+        // --- 3. 所有者欄 ---
+        drawText(200, 95, v('owner_name'), 12, NAME_W);
+        drawText(235, 90, (v('owner_address_code') || '').substring(0, 12), 11, OCR_W);
+        drawChomeRight(235, v('owner_chome'));
+        drawText(235, 343, v('owner_banchi'), 11, OCR_W);
+        drawText(200, 731, v('owner_code'), 11, OCR_W);
+
+        // --- 4. 使用者欄（所有者と同じ →「１」）---
+        if (isChecked('check_user_same_as_owner')) {
+            drawText(290, X_ONE, '１', 12);
+        } else {
+            drawText(290, 95, v('user_name'), 12, NAME_W);
+        }
+        if (isChecked('check_user_same_as_owner_addr')) {
+            drawText(335, X_ONE, '１', 12);
+        } else {
+            drawText(336, 90, (v('user_address_code') || '').substring(0, 12), 11, OCR_W);
+            drawChomeRight(336, v('user_chome'));
+            drawText(336, 343, v('user_banchi'), 11, OCR_W);
+        }
+
+        // --- 5. 使用の本拠（使用者住所と同じ →「１」）---
+        if (isChecked('check_base_same_as_user')) {
+            drawText(385, X_ONE, '１', 12);
+        } else {
+            drawText(385, 90, (v('base_address_code') || '').substring(0, 12), 11, OCR_W);
+            drawChomeRight(385, v('base_chome'));
+            drawText(385, 343, v('base_banchi'), 11, OCR_W);
+        }
+
+        // --- 6. 型式認定番号 ---
+        drawText(428,X_ONE-5 , v('model_cert_1'), 11);
+        drawText(428, 68, v('model_cert_2'), 11, OCR_W);
+
+        // --- 7. 申請人（下部手書き欄）---
+        const SZ_APP = 8;
+        drawText(484, 100, v('app_user_name'), SZ_APP);
+        drawText(502, 100, v('app_user_address'), SZ_APP);
+        drawText(519, 100, v('app_owner_name'), SZ_APP);
+        drawText(540, 100, v('app_owner_address'), SZ_APP);
+
+        drawText(484, 362, v('app_old_user_name'), SZ_APP);
+        drawText(502, 362, v('app_old_user_address'), SZ_APP);
+        drawText(519, 362, v('app_old_owner_name'), SZ_APP);
+        drawText(540, 362, v('app_old_owner_address'), SZ_APP);
+
+        drawText(484, 642, v('app_user_base_address'), SZ_APP);
+        drawText(510, 642, v('change_reason'), 9);
+
+        const d = new Date();
+        const dateStr = [d.getFullYear(), String(d.getMonth() + 1).padStart(2, '0'), String(d.getDate()).padStart(2, '0')].join('');
+        const nameForFile = (v('owner_name') || v('app_user_name') || '申請者')
+            .replace(/[\\/:*?"<>|]/g, '_')
+            .trim() || '申請者';
+        const fileName = `${dateStr}_${nameForFile}_軽二輪第1号様式.pdf`;
+        const pdfDataUri = await pdfDoc.saveAsBase64({ dataUri: true });
+        const link = document.createElement('a');
+        link.href = pdfDataUri;
+        link.download = fileName;
+        link.click();
+    }
+</script>
+</body>
+</html>

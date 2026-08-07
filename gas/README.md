@@ -38,6 +38,7 @@ Apps Script エディタで「プロジェクトの設定」→「スクリプ�
   "3gou2": "HTML_FILE_ID",
   "3gou3": "HTML_FILE_ID",
   "senyo3": "HTML_FILE_ID",
+  "kei2rin1gou": "HTML_FILE_ID",
   "keidai1gou": "HTML_FILE_ID",
   "keidai4gou": "HTML_FILE_ID",
   "keidai4gou3": "HTML_FILE_ID",
@@ -64,6 +65,7 @@ Apps Script エディタで「プロジェクトの設定」→「スクリプ�
   "3gou2": {"templatePdfId":"PDF_FILE_ID"},
   "3gou3": {"templatePdfId":"PDF_FILE_ID"},
   "senyo3": {"templatePdfId":"PDF_FILE_ID"},
+  "kei2rin1gou": {"templatePdfId":"PDF_FILE_ID"},
   "keidai1gou": {"templatePdfId":"PDF_FILE_ID"},
   "keidai4gou": {"templatePdfId":"PDF_FILE_ID"},
   "keidai4gou3": {"templatePdfId":"PDF_FILE_ID"},
@@ -92,7 +94,34 @@ Apps Script エディタで「プロジェクトの設定」→「スクリプ�
 - **`CAFA_PDF_OUTPUT_FOLDER_ID`** … 上記とは別のフォルダに保存したいときだけ指定（テナント別デプロイで上書きする用途など）。
 - Webアプリが「アクセスしているユーザー」で実行される場合、**各ユーザーがそのフォルダにファイルを作成できる権限**（共有の編集者など）が必要です。
 
-### 4. Webアプリとしてデプロイ
+### 4. 様式を追加したとき（例: 軽二輪第1号 `kei2rin1gou`）
+
+ポータルにカードを足すだけでは足りません。**コードと Script Properties の両方**を更新します。
+
+| 手順 | 作業内容 |
+|------|----------|
+| 1 | リポジトリの `kei2rin1gou/index.html` と `kei2rin1gou/template.pdf` を Drive にアップロード（既存フォルダに置くか新規作成） |
+| 2 | Drive 上の **HTML ファイルID** と **template.pdf のファイルID** を控える |
+| 3 | `gas/Code.gs` の `APP.pages` / `PAGE_HTML_FILE_MAP_DEFAULT` / `ASSET_MAP_DEFAULT` に `'kei2rin1gou'` を追加（リポジトリ側は済） |
+| 4 | `gas/Portal.html` にカードを追加（リポジトリ側は済） |
+| 5 | Script Properties の **`CAFA_PAGE_HTML_FILE_MAP_JSON`** に `"kei2rin1gou": "<HTMLのDriveファイルID>"` を追記 |
+| 6 | Script Properties の **`CAFA_ASSET_MAP_JSON`** に `"kei2rin1gou": {"templatePdfId":"<PDFのDriveファイルID>"}` を追記（フォントは既存の `_shared.fontTtfId` を共用） |
+| 7 | Apps Script に最新の `Code.gs` / `Portal.html` を反映し、**ウェブアプリを再デプロイ**（新バージョン） |
+| 8 | 以後 Git で `kei2rin1gou/index.html` を直したら、**Drive 上の同HTMLも同じ内容で上書き**する |
+
+JSON を編集するときは、既存キーを消さないよう注意してください。エディタでプロパティ値を開いて追記し、保存後にポータルから「軽二輪 第1号様式」→作成する、で PDF 出力まで確認します。
+
+**既存環境への追記例（差分イメージ）:**
+
+```json
+"kei2rin1gou": "HTML_FILE_ID_OF_kei2rin1gou_index.html"
+```
+
+```json
+"kei2rin1gou": {"templatePdfId":"PDF_FILE_ID_OF_kei2rin1gou_template.pdf"}
+```
+
+### 5. Webアプリとしてデプロイ
 
 - 「デプロイ」→「新しいデプロイ」
 - 種類: 「ウェブアプリ」
@@ -100,11 +129,10 @@ Apps Script エディタで「プロジェクトの設定」→「スクリプ�
   - 履歴をユーザー（Googleアカウント）単位で保存するため
 - アクセスできるユーザー: 運用方針に合わせて選択
 
-### 5. 動作のポイント（実装側の仕組み）
+### 6. 動作のポイント（実装側の仕組み）
 
 - **各様式のHTMLはDriveから読み込み**、返却時に「注入スクリプト」を追加しています。
   - `fetch('template.pdf')` / `fetch('../assets/font.ttf')`（従来の `font.ttf` も可）→ `getAssetBase64(formId, ...)` へ自動転送
   - `localStorage.setItem('applicationHistory', ...)` → `saveHistory(lastRecord)` を自動呼び出し
 - 申請履歴は、Script Properties の `CAFA_APPLICATION_HISTORY_FILE_ID` で指定した JSON ファイル、または `CAFA_HISTORY_PARENT_FOLDER_ID` 配下（未設定時は各ユーザーのマイドライブ直下）の `CAFAforHIRANO - <email>` / `applicationHistory.json` に保存・読み取りされます。
 - 完成PDFは、上記とは別に **`CAFA_PDF_OUTPUT_FOLDER_ID`（優先）または `CAFA_PDF_OUTPUT_FOLDER_ID_DEFAULT` で指定したフォルダ**に保存されます。
-
