@@ -54,12 +54,17 @@ Apps Script エディタで「プロジェクトの設定」→「スクリプ�
 各様式が参照する**PDFテンプレ/フォントのDriveファイルID**を設定します。
 
 - **必須:** 各様式の `templatePdfId`（その様式用の `template.pdf`）と、共通フォントの **`_shared.fontTtfId`**（リポジトリの `assets/font.ttf` をDriveに1本アップロードしたファイルID）。
+- **異体字（IVS）対応:** PDFで「辻󠄀」など一点しんにょうを出すには、**PUA入りの `assets/font.ttf`** をDriveに差し替え、あわせて **`_shared.pdfIvsJsId`** に `assets/pdf-ivs.js` のDriveファイルIDを設定します（GASがHTMLへインライン注入します）。任意で `_shared.ivsMapJsonId`（`ivs-map.json`）も置けます。
 - JSONの一部だけを上書きする場合も、マージ後に上記が揃うようにしてください。エラー内容はブラウザのアラート2行目以降に表示されます。
 - **Drive上の各様式HTML**は、Gitの `index.html` を更新したあと、同じ内容でDriveのファイルを上書き（または差し替え）しないと、GAS側の修正が画面に反映されません。
 
 ```json
 {
-  "_shared": {"fontTtfId":"FONT_FILE_ID"},
+  "_shared": {
+    "fontTtfId": "FONT_FILE_ID",
+    "pdfIvsJsId": "PDF_IVS_JS_FILE_ID",
+    "ivsMapJsonId": "IVS_MAP_JSON_FILE_ID"
+  },
   "1gou": {"templatePdfId":"PDF_FILE_ID"},
   "3gou": {"templatePdfId":"PDF_FILE_ID"},
   "3gou2": {"templatePdfId":"PDF_FILE_ID"},
@@ -75,6 +80,24 @@ Apps Script エディタで「プロジェクトの設定」→「スクリプ�
   "shako_zu": {"templatePdfId":"PDF_FILE_ID"}
 }
 ```
+
+#### 異体字フォントの差し替え（`scripts/build-ivs-font.py`）
+
+リポジトリの `assets/font.ttf` は IVS（異体字セレクタ）用の PUA マッピング入りです。再生成する場合:
+
+```bash
+python3 scripts/build-ivs-font.py
+```
+
+出力: `assets/font.ttf` / `assets/ivs-map.json` / `assets/pdf-ivs.js`
+
+**既存GAS環境への反映手順:**
+
+1. 生成済みの `assets/font.ttf` で Drive 上の共有フォントを**上書き**（`_shared.fontTtfId` のファイル）
+2. `assets/pdf-ivs.js` を Drive にアップロード（または上書き）し、`CAFA_ASSET_MAP_JSON` の `_shared.pdfIvsJsId` にファイルIDを設定
+3. （任意）`assets/ivs-map.json` も同様に置き `_shared.ivsMapJsonId` を設定
+4. 各様式の Drive HTML を Git の最新 `index.html` で上書き
+5. Apps Script の `Code.gs` を更新して**ウェブアプリを再デプロイ**
 
 #### 申請履歴 JSON（`applicationHistory.json`）の場所（任意）
 

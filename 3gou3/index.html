@@ -6,6 +6,7 @@
     <title>第3号様式の3 作成（永久抹消・重量税還付）</title>
     <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
     <script src="https://unpkg.com/@pdf-lib/fontkit/dist/fontkit.umd.min.js"></script>
+    <script src="../assets/pdf-ivs.js"></script>
     <style>
         /* 既存スタイル */
         body { font-family: "Helvetica Neue", Arial, sans-serif; max-width: 1000px; margin: 0 auto; padding: 20px; background-color: #f4f7f6; color: #333; }
@@ -682,6 +683,10 @@
         const pdfDoc = await PDFDocument.load(pdfBytes);
         pdfDoc.registerFontkit(fontkit);
         const customFont = await pdfDoc.embedFont(fontBytes);
+        if (typeof loadIvsMap === 'function') {
+            const ivsBase = (window.__CAFA_USE_DRIVE_ASSETS === true) ? '' : '../assets/';
+            await loadIvsMap(ivsBase);
+        }
         const page = pdfDoc.getPages()[0];
         
         // OCR用のマス目幅（Spacing）定義
@@ -690,14 +695,15 @@
         const OCR_NARROW = 14; // 少し狭い箇所の幅（もしあれば）
 
         // 描画関数
-        const draw = (text, x, y, size = 10, spacing = 0, align = 'left') => {
+                const draw = (text, x, y, size = 10, spacing = 0, align = 'left') => {
             if (!text) return;
-            text = String(text);
+            text = typeof normalizeIvsText === 'function' ? normalizeIvsText(String(text)) : String(text);
+            const chars = typeof splitGraphemes === 'function' ? splitGraphemes(text) : Array.from(text);
             
             if (spacing > 0) {
                 // OCRモード
-                for (let i = 0; i < text.length; i++) {
-                    page.drawText(text[i], { x: x + (i * spacing), y, size, font: customFont, color: rgb(0, 0, 0) });
+                for (let i = 0; i < chars.length; i++) {
+                    page.drawText(chars[i], { x: x + (i * spacing), y, size, font: customFont, color: rgb(0, 0, 0) });
                 }
             } else {
                 // 通常テキスト

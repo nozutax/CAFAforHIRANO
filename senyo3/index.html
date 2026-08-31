@@ -7,6 +7,7 @@
     <title>継続検査用データ入力アプリ（専用３号様式）</title>
     <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
     <script src="https://unpkg.com/@pdf-lib/fontkit/dist/fontkit.umd.min.js"></script>
+    <script src="../assets/pdf-ivs.js"></script>
     <style>
         /* 既存スタイル */
         body { font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background-color: #fcfcfc; color: #333; }
@@ -483,13 +484,19 @@
         const pdfDoc = await PDFDocument.load(pdfBytes);
         pdfDoc.registerFontkit(fontkit);
         const customFont = await pdfDoc.embedFont(fontBytes);
+        if (typeof loadIvsMap === 'function') {
+            const ivsBase = (window.__CAFA_USE_DRIVE_ASSETS === true) ? '' : '../assets/';
+            await loadIvsMap(ivsBase);
+        }
         const page = pdfDoc.getPages()[0];
         
-        const drawText = (text, x, y, size = 10, spacing = 0) => {
+                const drawText = (text, x, y, size = 10, spacing = 0) => {
             if (!text) return;
+            text = typeof normalizeIvsText === 'function' ? normalizeIvsText(String(text)) : String(text);
+            const chars = typeof splitGraphemes === 'function' ? splitGraphemes(text) : Array.from(text);
             if (spacing > 0) {
-                for (let i = 0; i < text.length; i++) {
-                    page.drawText(text[i], { x: x + (i * spacing), y, size, font: customFont, color: rgb(0, 0, 0) });
+                for (let i = 0; i < chars.length; i++) {
+                    page.drawText(chars[i], { x: x + (i * spacing), y, size, font: customFont, color: rgb(0, 0, 0) });
                 }
             } else {
                 page.drawText(text, { x, y, size, font: customFont, color: rgb(0, 0, 0) });

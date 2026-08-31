@@ -6,6 +6,7 @@
     <title>軽第4号様式の3 作成アプリ</title>
     <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
     <script src="https://unpkg.com/@pdf-lib/fontkit/dist/fontkit.umd.min.js"></script>
+    <script src="../assets/pdf-ivs.js"></script>
     <style>
         /* 既存スタイル */
         body { font-family: "Helvetica Neue", Arial, sans-serif; max-width: 950px; margin: 0 auto; padding: 20px; background-color: #f5f5f5; color: #333; }
@@ -658,18 +659,23 @@
         const pdfDoc = await PDFDocument.load(pdfBytes);
         pdfDoc.registerFontkit(fontkit);
         const customFont = await pdfDoc.embedFont(fontBytes);
+        if (typeof loadIvsMap === 'function') {
+            const ivsBase = (window.__CAFA_USE_DRIVE_ASSETS === true) ? '' : '../assets/';
+            await loadIvsMap(ivsBase);
+        }
         const page = pdfDoc.getPages()[0];
         
         // 描画ヘルパー (A4縦想定)
         // 軽自動車様式はOCR枠が標準18pt前後
         const OCR_W = 17.2; 
         
-        const draw = (text, x, y, size = 10, spacing = 0) => {
+                const draw = (text, x, y, size = 10, spacing = 0) => {
             if (!text) return;
-            text = String(text);
+            text = typeof normalizeIvsText === 'function' ? normalizeIvsText(String(text)) : String(text);
+            const chars = typeof splitGraphemes === 'function' ? splitGraphemes(text) : Array.from(text);
             if (spacing > 0) {
-                for (let i = 0; i < text.length; i++) {
-                    page.drawText(text[i], { x: x + (i * spacing), y, size, font: customFont, color: rgb(0, 0, 0) });
+                for (let i = 0; i < chars.length; i++) {
+                    page.drawText(chars[i], { x: x + (i * spacing), y, size, font: customFont, color: rgb(0, 0, 0) });
                 }
             } else {
                 page.drawText(text, { x, y, size, font: customFont, color: rgb(0, 0, 0) });
