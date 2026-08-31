@@ -70,9 +70,13 @@ const PAGE_HTML_FILE_MAP_DEFAULT = {
  * }
  * フォントは全様式共通のため `_shared.fontTtfId` に1つだけ設定すれば足ります。
  * 後方互換のため、`_shared.fontTtfId` が空のときは各様式の `fontTtfId` にフォールバックします。
+ * 異体字（IVS）PDF表示: `_shared.pdfIvsJsId`（必須推奨）に `pdf-ivs.js`、任意で `_shared.ivsMapJsonId`。
  */
 const ASSET_MAP_DEFAULT = {
-  _shared: { fontTtfId: '' },
+  // fontTtfId: 共有フォント（IVS用PUA入り assets/font.ttf）
+  // pdfIvsJsId: assets/pdf-ivs.js（異体字正規化。Driveに置きHTMLへインライン注入）
+  // ivsMapJsonId: assets/ivs-map.json（任意。pdf-ivs.js 埋め込みマップの上書き用）
+  _shared: { fontTtfId: '', pdfIvsJsId: '', ivsMapJsonId: '' },
   '1gou': { templatePdfId: '', fontTtfId: '' },
   '3gou': { templatePdfId: '', fontTtfId: '' },
   '3gou2': { templatePdfId: '', fontTtfId: '' },
@@ -193,7 +197,7 @@ function _getRequiredScriptProperty_(key) {
 /**
  * Client API: get asset base64 bytes.
  * @param {string} formId e.g. '1gou'
- * @param {string} assetType 'template' | 'font'
+ * @param {string} assetType 'template' | 'font' | 'ivsMap' | 'ivsJs'
  * @returns {string} base64
  */
 function getAssetBase64(formId, assetType) {
@@ -221,6 +225,22 @@ function getAssetBase64(formId, assetType) {
       );
     }
     return _readDriveFileBase64(fontId);
+  }
+  if (at === 'ivsMap') {
+    const shared = map._shared;
+    const id = shared && String(shared.ivsMapJsonId || '').trim();
+    if (!id) {
+      throw new Error('CAFA_ASSET_MAP_JSON に _shared.ivsMapJsonId（ivs-map.json）が未設定です。');
+    }
+    return _readDriveFileBase64(id);
+  }
+  if (at === 'ivsJs') {
+    const shared = map._shared;
+    const id = shared && String(shared.pdfIvsJsId || '').trim();
+    if (!id) {
+      throw new Error('CAFA_ASSET_MAP_JSON に _shared.pdfIvsJsId（pdf-ivs.js）が未設定です。');
+    }
+    return _readDriveFileBase64(id);
   }
   throw new Error('未対応のassetTypeです: ' + at);
 }
@@ -326,7 +346,36 @@ function _renderDriveHtmlPage_(pageId) {
   return HtmlService.createHtmlOutput(injected).setTitle(APP.title).addMetaTag('viewport', 'width=device-width, initial-scale=1.0');
 }
 
+function _injectPdfIvsJs_(html) {
+  const map = _getAssetMap();
+  const shared = map && map._shared;
+  const jsId = shared && String(shared.pdfIvsJsId || '').trim();
+  if (!jsId) return html;
+  let src = '';
+  try {
+    src = DriveApp.getFileById(jsId).getBlob().getDataAsString('utf-8');
+  } catch (e) {
+    throw new Error(
+      'CAFA_ASSET_MAP_JSON の _shared.pdfIvsJsId から pdf-ivs.js を読めません。' +
+        (e && e.message ? (' ' + e.message) : '')
+    );
+  }
+  // Avoid breaking out of the injected script tag
+  const safe = String(src).replace(/<\/script/gi, '<\\/script');
+  const inline = '<script>\n' + safe + '\n</script>';
+  const re = /<script\b[^>]*\bsrc=["'][^"']*pdf-ivs\.js["'][^>]*>\s*<\/script>/i;
+  if (re.test(html)) {
+    return html.replace(re, inline);
+  }
+  // Fallback: insert before </head> or at top
+  if (/<\/head>/i.test(html)) {
+    return html.replace(/<\/head>/i, inline + '\n</head>');
+  }
+  return inline + '\n' + html;
+}
+
 function _injectAdapters_(html, formId) {
+  html = _injectPdfIvsJs_(String(html || ''));
   const portalUrl = getUrlFor('portal');
   const serviceUrl = ScriptApp.getService().getUrl();
   const safeFormId = String(formId || '').replace(/[^\w\-]/g, '');
@@ -386,10 +435,18 @@ function _injectAdapters_(html, formId) {
     "      const url = String(raw || '');",
     "      const isTemplate = url === 'template.pdf' || /shozaizu-haichizu\\.pdf$/i.test(url) || /(?:^|\\/)template\\.pdf$/i.test(url);",
     "      const isFont = url === 'font.ttf' || url === '../assets/font.ttf' || /(?:^|\\/)assets\\/font\\.ttf$/i.test(url) || /(?:^|\\/)font\\.ttf$/i.test(url);",
+    "      const isIvsMap = url === 'ivs-map.json' || url === '../assets/ivs-map.json' || /(?:^|\\/)ivs-map\\.json$/i.test(url);",
     "      const isStaticMap = url && (url.indexOf('/api/staticmap?') === 0 || url.indexOf('api/staticmap?') === 0);",
-    "      if(isTemplate || isFont){",
-    "        const type = isFont ? 'font' : 'template';",
-    "        return fetchAsset_(type).then((buf)=>({ ok:true, arrayBuffer: async ()=>buf }));",
+    "      if(isTemplate || isFont || isIvsMap){",
+    "        const type = isFont ? 'font' : (isIvsMap ? 'ivsMap' : 'template');",
+    "        return fetchAsset_(type).then((buf)=>({",
+    "          ok:true,",
+    "          arrayBuffer: async ()=>buf,",
+    "          json: async function(){",
+    "            const text = new TextDecoder('utf-8').decode(new Uint8Array(buf));",
+    "            return JSON.parse(text);",
+    "          }",
+    "        }));",
     "      }",
     "      if(isStaticMap){",
     "        try{",

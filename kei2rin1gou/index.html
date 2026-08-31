@@ -6,6 +6,7 @@
     <title>軽二輪第1号様式 作成アプリ</title>
     <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
     <script src="https://unpkg.com/@pdf-lib/fontkit/dist/fontkit.umd.min.js"></script>
+    <script src="../assets/pdf-ivs.js"></script>
     <style>
         body {
             font-family: "Helvetica Neue", Arial, sans-serif;
@@ -717,18 +718,23 @@
         const pdfDoc = await PDFDocument.load(pdfBytes);
         pdfDoc.registerFontkit(fontkit);
         const customFont = await pdfDoc.embedFont(fontBytes);
+        if (typeof loadIvsMap === 'function') {
+            const ivsBase = (window.__CAFA_USE_DRIVE_ASSETS === true) ? '' : '../assets/';
+            await loadIvsMap(ivsBase);
+        }
         const page = pdfDoc.getPages()[0];
 
         // template.pdf: MediaBox 595×842 + Rotate 90（横向き）
         // 正立: rotate +90
         // 座標: mx = 上端からの距離(縦), my = 左端からの距離(横)
         // 文字送りは my 増加方向（左→右）
-        const drawText = (mx, my, text, size = 11, pitch = 0) => {
+                const drawText = (mx, my, text, size = 11, pitch = 0) => {
             if (!text) return;
-            text = String(text);
+            text = typeof normalizeIvsText === 'function' ? normalizeIvsText(String(text)) : String(text);
+            const chars = typeof splitGraphemes === 'function' ? splitGraphemes(text) : Array.from(text);
             if (pitch > 0) {
-                for (let i = 0; i < text.length; i++) {
-                    page.drawText(text[i], {
+                for (let i = 0; i < chars.length; i++) {
+                    page.drawText(chars[i], {
                         x: mx,
                         y: my + i * pitch,
                         size,
